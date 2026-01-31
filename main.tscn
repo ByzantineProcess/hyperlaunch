@@ -1,0 +1,75 @@
+[gd_scene load_steps=3 format=3 uid="uid://cxpbedlcj5vce"]
+
+[ext_resource type="Script" uid="uid://b4xntwgjyg03y" path="res://Main.cs" id="1_0xm2m"]
+[ext_resource type="Texture2D" uid="uid://caii35k6s6cx8" path="res://assets/logo transparent.png" id="1_ig7tw"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0xm2m")
+
+[node name="backgrounds" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ColorRect" type="ColorRect" parent="backgrounds"]
+layout_mode = 0
+offset_right = 1287.0
+offset_bottom = 727.0
+color = Color(0.14545676, 0.31113946, 0.21866538, 1)
+
+[node name="ColorRect2" type="ColorRect" parent="backgrounds"]
+layout_mode = 0
+offset_right = 397.0
+offset_bottom = 718.0
+color = Color(0.20991853, 0.42051315, 0.2992617, 1)
+
+[node name="ColorRect3" type="ColorRect" parent="backgrounds"]
+layout_mode = 0
+offset_left = 397.0
+offset_right = 1296.0
+offset_bottom = 101.0
+color = Color(0.1677729, 0.3776658, 0.30045378, 1)
+
+[node name="ColorRect4" type="ColorRect" parent="backgrounds"]
+layout_mode = 0
+offset_right = 397.0
+offset_bottom = 101.0
+color = Color(0.19775927, 0.432678, 0.34846184, 1)
+
+[node name="LogoTransparent" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(195.56639, 51.375)
+scale = Vector2(2.7265625, 2.7265625)
+texture = ExtResource("1_ig7tw")
+
+[node name="interactibles" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Button" type="Button" parent="interactibles"]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 126.0
+offset_right = 296.0
+offset_bottom = 178.0
+focus_mode = 0
+text = "launch hypixkcl;elkf testing"
+
+[node name="Button2" type="Button" parent="interactibles"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 28.0
+offset_right = 702.0
+offset_bottom = 80.0
+focus_mode = 0
+text = "log into your microslop account"
+
+[connection signal="pressed" from="interactibles/Button" to="." method="_on_launch_button_pressed"]
+[connection signal="pressed" from="interactibles/Button2" to="." method="_on_login_button_pressed"]
