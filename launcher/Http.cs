@@ -14,7 +14,7 @@ public static class Http
         DefaultRequestHeaders =
         {
             { "Accept", "application/json" },
-            // { "User-Agent", "Hyperlaunch/0.1 (https://github.com/byzantineprocess, discord: byzantineprocess)" }
+            { "User-Agent", "Hyperlaunch/0.1 (https://github.com/byzantineprocess, discord: byzantineprocess)" }
         }
     };
 
