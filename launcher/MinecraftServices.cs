@@ -1,10 +1,13 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Godot;
-using Hyperlaunch;
+
+namespace Hyperlaunch;
 
 public static class MinecraftServices
 {
+    // despite the name this is just for getting tokens
+    // everything specific to one account is handled by GameProfile.cs
     public static async Task<string> ExchangeTokens(string msAccessToken)
     {
         // TODO: add trycatches to literally all of this 

@@ -1,21 +1,34 @@
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
-using Godot;
 using System.Linq;
+using System.Collections.Generic;
+using System;
 
 namespace Hyperlaunch;
 
 public static class MSAuth
 {
     private static IPublicClientApplication app = PublicClientApplicationBuilder
-        .Create("c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb")
+        .Create("25c2eb21-47d5-4262-84c5-a308c11ee76a")
         .WithAuthority("https://login.microsoftonline.com/consumers")
         .WithRedirectUri("https://login.microsoftonline.com/common/oauth2/nativeclient")
         .Build();
 
     public static async Task<string> Login()
     {
+        string homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var cacheHelper = await MsalCacheHelper.CreateAsync(new StorageCreationPropertiesBuilder("msal_cache.dat", homeDirectory + "/.hyperlaunch")
+            .WithMacKeyChain("HyperlaunchMSALCache", "Hyperlaunch")
+            .WithLinuxKeyring(
+                "hyperlaunch",
+                MsalCacheHelper.LinuxKeyRingDefaultCollection,
+                "hyperlaunch token storage. stores Microsoft account tokens.",
+                new KeyValuePair<string, string>("Version", "0.1"),
+                new KeyValuePair<string, string>("Product", "Hyperlaunch"))
+            .Build());
+        
+        cacheHelper.RegisterCache(app.UserTokenCache);
 
         var accounts = await app.GetAccountsAsync();
         AuthenticationResult result = null;
@@ -33,7 +46,7 @@ public static class MSAuth
     {
         var result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], deviceCodeResult =>
         {
-            GD.Print(deviceCodeResult.UserCode);
+            Godot.GD.Print(deviceCodeResult.UserCode); // change to proper UI later
             return Task.FromResult(0);
         }).ExecuteAsync();
         return result.AccessToken;
