@@ -26,8 +26,11 @@ public partial class Main : Control
     public async void _on_launch_button_pressed()
     {
         GD.Print("Launch button pressed");
-        string homeDirectory = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
-        Settings.SettingsClass settings = new Settings.SettingsClass();
-        await settings.SaveToFile(homeDirectory + "/.hyperlaunch/settings.json");
+        var jvms = Jvm.ScanForJvms();
+        GD.Print("Found " + jvms.Count + " JVMs");
+        foreach (var jvm in jvms)
+        {
+            GD.Print("JVM: " + jvm.ExecPath + ", version " + jvm.Version);
+        }
     }
 }
