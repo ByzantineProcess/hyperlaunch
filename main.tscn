@@ -71,5 +71,13 @@ offset_bottom = 80.0
 focus_mode = 0
 text = "log into your microslop account"
 
+[node name="Latest" type="RichTextLabel" parent="."]
+layout_mode = 0
+offset_left = 433.0
+offset_top = 133.0
+offset_right = 1040.0
+offset_bottom = 170.0
+text = "Latest Minecraft release: "
+
 [connection signal="pressed" from="interactibles/Button" to="." method="_on_launch_button_pressed"]
 [connection signal="pressed" from="interactibles/Button2" to="." method="_on_login_button_pressed"]

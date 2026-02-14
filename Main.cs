@@ -1,4 +1,5 @@
 using Godot;
+using Hyperlaunch.Download;
 using System;
 
 namespace Hyperlaunch;
@@ -11,6 +12,8 @@ public partial class Main : Control
         await Settings.SettingsContainer.LoadAsync(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData) + "/.hyperlaunch/settings.json");
         GD.Print("Settings loaded");
         GD.Print(Settings.SettingsContainer.Current.SaveToString());
+        await VersionManifest.LoadAsync();
+        GetNode<RichTextLabel>("Latest").Text = "Latest Minecraft release: " + VersionManifest.Data.Latest.Release;
     }
     public async void _on_login_button_pressed()
     {

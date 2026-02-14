@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Hyperlaunch;
 
-public class GameProfile
+public class GameAccount
 {
     // TODO: encrypt in memory?
     public string MinecraftAccessToken { get; private set; }
@@ -20,7 +20,7 @@ public class GameProfile
     public Cape[] Capes { get; private set; }
 
 
-    public GameProfile(string mcAccessToken)
+    public GameAccount(string mcAccessToken)
     {
         MinecraftAccessToken = mcAccessToken;
     }
@@ -35,10 +35,10 @@ public class GameProfile
         
         
     }
-    public static async Task<GameProfile> CreateAsync(string msAccessToken)
+    public static async Task<GameAccount> CreateAsync(string msAccessToken)
     {
         string mcAccessToken = await MinecraftServices.ExchangeTokens(msAccessToken);
-        return new GameProfile(mcAccessToken);
+        return new GameAccount(mcAccessToken);
     }
 }
 

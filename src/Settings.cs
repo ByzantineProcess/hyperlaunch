@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace Hyperlaunch.Settings;
 
@@ -80,16 +80,16 @@ public class SettingsClass
             return new SettingsClass();
         }
         string settingsProfileSerialised = await File.ReadAllTextAsync(filepath);
-        return JsonConvert.DeserializeObject<SettingsClass>(settingsProfileSerialised);
+        return JsonSerializer.Deserialize<SettingsClass>(settingsProfileSerialised);
     }
     public async Task SaveToFile(string filepath)
     {
-        string settingsProfileSerialised = JsonConvert.SerializeObject(this, Formatting.Indented);
+        string settingsProfileSerialised = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
         await File.WriteAllTextAsync(filepath, settingsProfileSerialised);
     }
     public string SaveToString()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented);
+        return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     }
     public SettingsClass()
     {
