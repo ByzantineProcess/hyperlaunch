@@ -31,6 +31,7 @@ public static class MinecraftServices
         {
             GD.Print("Xbox Live authentication failed. Response: " + await xboxLiveResponse.Content.ReadAsStringAsync());
         }
+        GD.Print(await xboxLiveResponse.Content.ReadAsStringAsync());
         var xboxLiveData = await xboxLiveResponse.Content.ReadFromJsonAsync<dynamic>();
         string xboxLiveToken = xboxLiveData.GetProperty("Token").GetString();
         string userHash = xboxLiveData
@@ -77,6 +78,7 @@ public static class MinecraftServices
             }
         }
         xstsResponse.EnsureSuccessStatusCode();
+        GD.Print(await xstsResponse.Content.ReadAsStringAsync());
         var xstsData = await xstsResponse.Content.ReadFromJsonAsync<dynamic>();
         string xstsToken = xstsData.GetProperty("Token").GetString();
 
@@ -91,6 +93,7 @@ public static class MinecraftServices
         };
         var mcLoginResponse = await Http.PostAsJsonAsync("https://api.minecraftservices.com/authentication/login_with_xbox", mcLoginRequestBody);
         mcLoginResponse.EnsureSuccessStatusCode();
+        GD.Print(await mcLoginResponse.Content.ReadAsStringAsync());
         var mcLoginData = await mcLoginResponse.Content.ReadFromJsonAsync<dynamic>();
         string mcAccessToken = mcLoginData.GetProperty("access_token").GetString();
 

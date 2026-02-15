@@ -60,7 +60,7 @@ offset_top = 126.0
 offset_right = 296.0
 offset_bottom = 178.0
 focus_mode = 0
-text = "launch hypixkcl;elkf testing"
+text = "launch latest"
 
 [node name="Button2" type="Button" parent="interactibles"]
 layout_mode = 0

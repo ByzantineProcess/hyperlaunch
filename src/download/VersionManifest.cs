@@ -20,7 +20,7 @@ public static class VersionManifest
 
     public static async Task LoadAsync()
     {
-        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/", "manifest.tag");
+        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.tag");
         string cachedTag = null;
         if (File.Exists(cachePath))
         {
@@ -52,6 +52,24 @@ public static class VersionManifest
             await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/", "manifest.cache"), content);
         }
 
+    }
+
+    // function to get a GameVersion by its id (e.g. "1.20.1")
+    public static GameVersion GetVersionById(string id)
+    {
+        foreach (var version in Data.Versions)
+        {
+            if (version.Id == id)
+            {
+                return version;
+            }
+        }
+        throw new ArgumentException($"No version with id {id} found in manifest.");
+    }
+    // function to get the latest release version
+    public static GameVersion GetLatestRelease()
+    {
+        return GetVersionById(Data.Latest.Release);
     }
 }
 

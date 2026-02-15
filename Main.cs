@@ -1,11 +1,14 @@
 using Godot;
 using Hyperlaunch.Download;
+using Hyperlaunch.Launch;
 using System;
+using System.Collections.Generic;
 
-namespace Hyperlaunch;
+namespace Hyperlaunch.GodotGui;
 
 public partial class Main : Control
 {
+    GameAccount account;
     public override async void _Ready()
     {
         GD.Print("Main scene ready");
@@ -18,22 +21,25 @@ public partial class Main : Control
     public async void _on_login_button_pressed()
     {
         string msToken = await MSAuth.Login();
-        GD.Print("MS Access Token: " + msToken);
-        var loginStartTime = DateTime.Now;
-        string mcToken = await MinecraftServices.ExchangeTokens(msToken);
-        GD.Print("Minecraft Access Token: " + mcToken);
-        var loginEndTime = DateTime.Now;
-        GD.Print("Login took " + (loginEndTime - loginStartTime).TotalSeconds + " seconds");
+        account = await GameAccount.CreateAsync(msToken);
     }
 
     public async void _on_launch_button_pressed()
     {
-        GD.Print("Launch button pressed");
-        var jvms = Jvm.ScanForJvms();
-        GD.Print("Found " + jvms.Count + " JVMs");
-        foreach (var jvm in jvms)
+        // attempt to launch the game (?)
+        Jvm jvm = new Jvm("java"); // this will need to be changed to the actual java path later
+        GameVersion latestVersion = VersionManifest.GetLatestRelease();
+        ClientManifest clientManifest = await ClientManifest.LoadFromUrlAsync(latestVersion.Url);
+        List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
+
+        var progress = new Progress<long>(bytesRemaining =>
         {
-            GD.Print("JVM: " + jvm.ExecPath + ", version " + jvm.Version);
-        }
+            double mbRemaining = bytesRemaining / (1024.0 * 1024.0);
+            GD.Print($"Download progress: {mbRemaining:F2} MB remaining");
+        });
+
+        await DownloadTask.ExecuteAllAsync(downloadTasks, maxConcurrentNetwork: 4, bytesRemainingProgress: progress);
+
+        LaunchMinecraft.Launch(jvm, account, clientManifest);
     }
 }

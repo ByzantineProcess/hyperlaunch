@@ -3,10 +3,10 @@
 // then just gave up and told claude to do it
 // idk if it works ngl
 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -24,7 +24,7 @@ public class ClientManifest
     public AssetIndex AssetIndex { get; set; }
 
     [JsonPropertyName("assets")]
-    public string Assets { get; set; }
+    public string AssetCollection { get; set; }
 
     [JsonPropertyName("complianceLevel")]
     public int ComplianceLevel { get; set; }
@@ -61,21 +61,27 @@ public class ClientManifest
     [JsonPropertyName("type")]
     public string Type { get; set; }
 
-    // ── Loading ─────────────────────────────────────────────────────────
+    public string Original { get; private set; }
 
-    public static ClientManifest LoadFromFile(string path)
-    {
-        string json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<ClientManifest>(json);
-    }
+    // ── Loading ─────────────────────────────────────────────────────────
 
     public static async Task<ClientManifest> LoadFromFileAsync(string path)
     {
         string json = await File.ReadAllTextAsync(path);
-        return JsonSerializer.Deserialize<ClientManifest>(json);
+        ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
+        res.Original = json;
+        await res.AssetIndex.LoadIndexAsync();
+        return res;
     }
 
-    // TODO: add download-based loading here
+    public static async Task<ClientManifest> LoadFromUrlAsync(string url)
+    {
+        string json = await Http.Client.GetStringAsync(url);
+        ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
+        res.Original = json;
+        await res.AssetIndex.LoadIndexAsync();
+        return res;
+    }
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -115,6 +121,37 @@ public class ClientManifest
         }
         paths.Add(clientJarPath);
         return string.Join(separator, paths);
+    }
+
+    //<summary>Resolves all launch arguments at once. Returns a list of strings which are arguments to the JVM.\nResolved args are unformatted and may contain placeholders which need to be replaced by the caller.</summary>
+    public List<string> ResolveLaunchCommand(GameAccount account)
+    {
+        // first resolve JVM arguments with OS info since they may affect library selection
+        OsInfo os = OsInfo.Detect();
+        List<string> jvmArgs = ResolveJvmArguments(os);
+        // libraries should already be resolved by the time we call this
+        // but we can still get a classpath 
+        string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}/{Id}.jar");
+        jvmArgs = jvmArgs.Select(arg => arg.Replace("${classpath}", classpath)).ToList();
+        // then get the game arguments
+        List<string> gameArgs = ResolveGameArguments(new FeatureSet{});
+        gameArgs = gameArgs.Select(arg => arg
+            .Replace("${auth_player_name}", account.MinecraftUsername)
+            .Replace("${version_name}", Id)
+            .Replace("${auth_uuid}", account.MinecraftUUID)
+            .Replace("${auth_access_token}", account.MinecraftAccessToken)
+            .Replace("${game_directory}", DownloadTask.BasePath)
+            .Replace("${assets_root}", DownloadTask.BaseAssetPath)
+            .Replace("${assets_index_name}", AssetCollection)
+            .Replace("${version_type}", Type))
+            .ToList();
+        // remove xuid related placeholders since we don't have that info
+        gameArgs.Remove("${auth_xuid}");
+        gameArgs.Remove("--xuid");
+        // remove telemetry (?)
+        gameArgs.Remove("${clientId}");
+        gameArgs.Remove("--clientId");
+        return jvmArgs.Concat(gameArgs).ToList();
     }
 
     // ── Rule evaluation ─────────────────────────────────────────────────
@@ -288,6 +325,13 @@ public class AssetIndex
 
     [JsonPropertyName("url")]
     public string Url { get; set; }
+
+    public AssetManifest Index { get; private set; }
+
+    public async Task LoadIndexAsync()
+    {
+        Index = await AssetManifest.SmartLoadAsync(Url, Sha1, Id);
+    }
 }
 
 // ── Downloads ───────────────────────────────────────────────────────────
