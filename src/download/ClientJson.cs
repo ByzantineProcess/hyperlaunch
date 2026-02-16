@@ -46,6 +46,11 @@ public class ClientManifest
     public LoggingConfig? Logging { get; set; }
     #nullable disable
 
+    #nullable enable
+    [JsonPropertyName("minecraftArguments")]
+    public string? MinecraftArguments { get; set; }
+    #nullable disable
+
     [JsonPropertyName("mainClass")]
     public string MainClass { get; set; }
 
@@ -88,12 +93,27 @@ public class ClientManifest
     /// <summary>Returns flattened game arguments, evaluating rules against the supplied features.</summary>
     public List<string> ResolveGameArguments(FeatureSet features)
     {
-        return ResolveArgumentList(Arguments.Game, features, os: null);
+        // Pre-1.13 format: single space-separated string, no rules
+        if (Arguments == null && MinecraftArguments != null)
+            return MinecraftArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+        return ResolveArgumentList(Arguments?.Game, features, os: null);
     }
 
     /// <summary>Returns flattened JVM arguments, evaluating rules against the supplied OS info.</summary>
     public List<string> ResolveJvmArguments(OsInfo os)
     {
+        // Pre-1.13 format: no JVM args in manifest, use sensible defaults
+        if (Arguments == null || Arguments.Jvm == null)
+        {
+            return new List<string>
+            {
+                "-Djava.library.path=${natives_directory}",
+                "-cp",
+                "${classpath}"
+            };
+        }
+
         return ResolveArgumentList(Arguments.Jvm, features: null, os);
     }
 
@@ -132,7 +152,15 @@ public class ClientManifest
         // libraries should already be resolved by the time we call this
         // but we can still get a classpath 
         string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}/{Id}.jar");
-        jvmArgs = jvmArgs.Select(arg => arg.Replace("${classpath}", classpath)).ToList();
+        // make a directory for dumped native libs to go in
+        string nativesDir = Path.Combine(DownloadTask.BasePath, "natives/", Id);
+        Directory.CreateDirectory(nativesDir);
+        jvmArgs = jvmArgs.Select(arg => arg
+            .Replace("${launcher_name}", "Hyperlaunch")
+            .Replace("${launcher_version}", "0.1")
+            .Replace("${natives_directory}", nativesDir)
+            .Replace("${classpath}", classpath))
+            .ToList();
         // then get the game arguments
         List<string> gameArgs = ResolveGameArguments(new FeatureSet{});
         gameArgs = gameArgs.Select(arg => arg
@@ -141,17 +169,25 @@ public class ClientManifest
             .Replace("${auth_uuid}", account.MinecraftUUID)
             .Replace("${auth_access_token}", account.MinecraftAccessToken)
             .Replace("${game_directory}", DownloadTask.BasePath)
-            .Replace("${assets_root}", DownloadTask.BaseAssetPath)
+            .Replace("${assets_root}", DownloadTask.BasePath + "assets/")
             .Replace("${assets_index_name}", AssetCollection)
-            .Replace("${version_type}", Type))
+            .Replace("${version_type}", Type)
+            .Replace("${launcher_name}", "Hyperlaunch")
+            .Replace("${launcher_version}", "0.1")
+            .Replace("${natives_directory}", nativesDir)
+            .Replace("${user_type}", "msa"))
             .ToList();
         // remove xuid related placeholders since we don't have that info
         gameArgs.Remove("${auth_xuid}");
         gameArgs.Remove("--xuid");
         // remove telemetry (?)
-        gameArgs.Remove("${clientId}");
+        gameArgs.Remove("${clientid}");
         gameArgs.Remove("--clientId");
-        return jvmArgs.Concat(gameArgs).ToList();
+        // the wiki has no idea what this does so just yeet it
+        gameArgs.Remove("${user_properties}");
+        gameArgs.Remove("--userProperties");
+        // build final command: JVM args + main class + game args
+        return jvmArgs.Append(MainClass).Concat(gameArgs).ToList();
     }
 
     // ── Rule evaluation ─────────────────────────────────────────────────
@@ -418,6 +454,24 @@ public class Library
         var (groupId, artifactId, version) = ParseName();
         var groupPath = groupId.Replace('.', '/');
         return $"{groupPath}/{artifactId}/{version}/{artifactId}-{version}.jar";
+    }
+
+    /// <summary>Gets the native classifier key for the given OS, or null if no natives exist for this OS.</summary>
+    public string GetNativeClassifierKey(OsInfo os)
+    {
+        if (Natives == null) return null;
+        if (!Natives.TryGetValue(os.Name, out var key)) return null;
+        return key.Replace("${arch}", os.Arch);
+    }
+
+    /// <summary>Gets the native classifier artifact for the given OS, or null if unavailable.</summary>
+    public LibraryArtifact GetNativeArtifact(OsInfo os)
+    {
+        var key = GetNativeClassifierKey(os);
+        if (key == null) return null;
+        if (Downloads?.Classifiers == null) return null;
+        Downloads.Classifiers.TryGetValue(key, out var artifact);
+        return artifact;
     }
 }
 

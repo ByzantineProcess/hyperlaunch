@@ -1,5 +1,6 @@
 
 using System;
+using System.Security.Cryptography;
 
 namespace Hyperlaunch;
 
@@ -7,20 +8,41 @@ public static class Sha1
 {
     public static string Compute(string input)
     {
-        using var sha1 = System.Security.Cryptography.SHA1.Create();
-        var hashBytes = sha1.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
-        return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        Span<byte> hashBytes = stackalloc byte[20];
+        SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(input), hashBytes);
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
     public static bool Verify(string input, string expectedHash)
     {
-        var computedHash = Compute(input);
-        return string.Equals(computedHash, expectedHash, StringComparison.OrdinalIgnoreCase);
+        Span<byte> hashBytes = stackalloc byte[20];
+        SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(input), hashBytes);
+        return EqualsHex(hashBytes, expectedHash);
     }
     public static bool Verify(byte[] input, string expectedHash)
     {
-        using var sha1 = System.Security.Cryptography.SHA1.Create();
-        var hashBytes = sha1.ComputeHash(input);
-        var computedHash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-        return string.Equals(computedHash, expectedHash, StringComparison.OrdinalIgnoreCase);
+        Span<byte> hashBytes = stackalloc byte[20];
+        SHA1.HashData(input, hashBytes);
+        return EqualsHex(hashBytes, expectedHash);
     }
+
+    private static bool EqualsHex(ReadOnlySpan<byte> hash, ReadOnlySpan<char> hex)
+    {
+        if (hex.Length != hash.Length * 2) return false;
+        for (int i = 0; i < hash.Length; i++)
+        {
+            int hi = HexVal(hex[i * 2]);
+            int lo = HexVal(hex[i * 2 + 1]);
+            if (hi < 0 || lo < 0) return false;
+            if (hash[i] != (byte)((hi << 4) | lo)) return false;
+        }
+        return true;
+    }
+
+    private static int HexVal(char c) => c switch
+    {
+        >= '0' and <= '9' => c - '0',
+        >= 'a' and <= 'f' => c - 'a' + 10,
+        >= 'A' and <= 'F' => c - 'A' + 10,
+        _ => -1,
+    };
 }

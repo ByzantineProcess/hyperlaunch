@@ -2,27 +2,28 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Godot;
 
 namespace Hyperlaunch;
 
 public class GameAccount
 {
     // TODO: encrypt in memory?
-    public string MinecraftAccessToken { get; private set; }
+    public string MinecraftAccessToken { get; set; }
     [JsonPropertyName("name")]
-    public string MinecraftUsername { get; private set; }
+    public string MinecraftUsername { get; init; }
     [JsonPropertyName("id")]
-    public string MinecraftUUID { get; private set; }
-    public Skin CurrentSkin { get; private set; }
+    public string MinecraftUUID { get; init; }
+    public Skin CurrentSkin { get; set; }
 
     #nullable enable
-    public Cape? CurrentCape { get; private set; }
+    public Cape? CurrentCape { get; set; }
     #nullable disable
     
     [JsonPropertyName("skins")]
-    public Skin[] Skins { get; private set; }
+    public Skin[] Skins { get; init; }
     [JsonPropertyName("capes")]
-    public Cape[] Capes { get; private set; }
+    public Cape[] Capes { get; init; }
     public static async Task<GameAccount> FetchProfileAsync(string mcAccessToken)
     {
         var profileRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.minecraftservices.com/minecraft/profile");
@@ -31,12 +32,15 @@ public class GameAccount
         var profileResponse = await Http.Client.SendAsync(profileRequest);
         profileResponse.EnsureSuccessStatusCode();
 
+        GD.Print("Successfully fetched Minecraft profile data. Response: " + await profileResponse.Content.ReadAsStringAsync());
+
         return await profileResponse.Content.ReadFromJsonAsync<GameAccount>();
     }
     public static async Task<GameAccount> CreateAsync(string msAccessToken)
     {
         string mcAccessToken = await MinecraftServices.ExchangeTokens(msAccessToken);
         var profileData = await FetchProfileAsync(mcAccessToken);
+        GD.Print("Successfully fetched Minecraft profile data for " + profileData.MinecraftUsername);
         profileData.MinecraftAccessToken = mcAccessToken;
         return profileData;
     }

@@ -59,9 +59,9 @@ public class AssetManifest
     
     public void SaveInCorrectSpot()
     {
-        string assetsDir = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/", "assets/", "indexes/");
+        string assetsDir = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "assets/indexes/");
         System.IO.Directory.CreateDirectory(assetsDir);
-        System.IO.File.WriteAllText(System.IO.Path.Combine(assetsDir, "objects.json"), Original);
+        System.IO.File.WriteAllText(System.IO.Path.Combine(assetsDir, $"{Id}.json"), Original);
     }
     
 }

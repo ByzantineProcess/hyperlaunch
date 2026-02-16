@@ -34,7 +34,7 @@ public static class VersionManifest
         HttpResponseMessage response = await Http.Client.SendAsync(etaggedRequest);
         if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
         {
-            string cachedContent = await File.ReadAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/", "manifest.cache"));
+            string cachedContent = await File.ReadAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.cache"));
             _data = JsonSerializer.Deserialize<VersionManifestData>(cachedContent);
             return;
         }
@@ -47,9 +47,9 @@ public static class VersionManifest
             {
                 string etag = string.Join("", etagValues);
                 GD.Print("Etag from server: " + etag);
-                await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/", "manifest.tag"), etag);
+                await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.tag"), etag);
             }
-            await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/", "manifest.cache"), content);
+            await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.cache"), content);
         }
 
     }
@@ -64,7 +64,14 @@ public static class VersionManifest
                 return version;
             }
         }
+        // print top 5 versions in manifest for debugging
+        GD.Print("Available versions:");
+        for (int i = 0; i < Math.Min(5, Data.Versions.Count); i++)
+        {
+            GD.Print(Data.Versions[i].Id);
+        }
         throw new ArgumentException($"No version with id {id} found in manifest.");
+        
     }
     // function to get the latest release version
     public static GameVersion GetLatestRelease()
