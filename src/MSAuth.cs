@@ -46,7 +46,7 @@ public static class MSAuth
     {
         var result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], deviceCodeResult =>
         {
-            // Godot.GD.Print(deviceCodeResult.UserCode); // change to proper UI later
+            Log.Print($"To authenticate, visit {deviceCodeResult.VerificationUrl} and enter the code: {deviceCodeResult.UserCode}");
             return Task.FromResult(0);
         }).ExecuteAsync();
         return result.AccessToken;

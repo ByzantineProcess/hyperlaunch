@@ -92,14 +92,14 @@ public class ClientManifest
 
     public static async Task<ClientManifest> LoadFromUrlWithCacheAsync(string url, string sha1, string id)
     {
-        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "versions/", $"{id}.json");
+        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/", $"{id}.json");
         if (File.Exists(cachePath))
         {
             try
             {
                 return await LoadFromFileAsync(cachePath);
             }
-            catch (Exception ex)
+            catch
             {
             }
         }

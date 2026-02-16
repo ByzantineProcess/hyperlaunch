@@ -42,7 +42,7 @@ public static class Program
 
     static void PrintUsage()
     {
-        Console.WriteLine("hyperlaunch-cli — fastest minecraft launcher around");
+        Console.WriteLine("hyperlaunch — fastest minecraft launcher around");
         Console.WriteLine();
         Console.WriteLine("Usage:");
         Console.WriteLine("  hyperlaunch-cli login                  Log in with your Microsoft account");
@@ -130,7 +130,8 @@ public static class Program
         DownloadTask.ExtractNatives(clientManifest, nativesDir);
 
         // Launch
-        Jvm jvm = new Jvm("javaw");
+        string javaExecutable = System.OperatingSystem.IsWindows() ? "javaw" : "java";
+        Jvm jvm = new Jvm(javaExecutable);
         Console.WriteLine("Launching Minecraft...");
         LaunchMinecraft.Launch(jvm, account, clientManifest);
     }
