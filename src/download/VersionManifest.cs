@@ -6,7 +6,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Godot;
 
 namespace Hyperlaunch.Download;
 
@@ -46,7 +45,7 @@ public static class VersionManifest
             if (response.Headers.TryGetValues("ETag", out var etagValues)) // response.Headers.ETag is null for some stupid reason
             {
                 string etag = string.Join("", etagValues);
-                GD.Print("Etag from server: " + etag);
+                Log.Print("Etag from server: " + etag);
                 await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.tag"), etag);
             }
             await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.cache"), content);
@@ -65,10 +64,10 @@ public static class VersionManifest
             }
         }
         // print top 5 versions in manifest for debugging
-        GD.Print("Available versions:");
+        Log.Print("Available versions:");
         for (int i = 0; i < Math.Min(5, Data.Versions.Count); i++)
         {
-            GD.Print(Data.Versions[i].Id);
+            Log.Print(Data.Versions[i].Id);
         }
         throw new ArgumentException($"No version with id {id} found in manifest.");
         

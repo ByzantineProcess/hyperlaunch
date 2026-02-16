@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Godot;
 
 namespace Hyperlaunch;
 
@@ -29,7 +28,7 @@ public static class MinecraftServices
         }
         catch
         {
-            GD.Print("Xbox Live authentication failed. Response: " + await xboxLiveResponse.Content.ReadAsStringAsync());
+            Log.Print("Xbox Live authentication failed. Response: " + await xboxLiveResponse.Content.ReadAsStringAsync());
         }
         // GD.Print(await xboxLiveResponse.Content.ReadAsStringAsync());
         var xboxLiveData = await xboxLiveResponse.Content.ReadFromJsonAsync<dynamic>();

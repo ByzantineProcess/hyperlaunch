@@ -1,0 +1,6 @@
+<!-- Set CLI intermediate output path before SDK props are imported to avoid conflicts with the Godot project -->
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectFile)' == 'hyperlaunch-cli.csproj'">
+    <BaseIntermediateOutputPath>obj-cli\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

@@ -1,7 +1,9 @@
 // hey it's the code writer here
 // i sat looking at the schema for like 4 hours
 // then just gave up and told claude to do it
-// idk if it works ngl
+// i have looked over it and it should all be fine
+
+// should i move every class to its own file? 
 
 using System;
 using System.Collections.Generic;
@@ -86,6 +88,30 @@ public class ClientManifest
         res.Original = json;
         await res.AssetIndex.LoadIndexAsync();
         return res;
+    }
+
+    public static async Task<ClientManifest> LoadFromUrlWithCacheAsync(string url, string sha1, string id)
+    {
+        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "versions/", $"{id}.json");
+        if (File.Exists(cachePath))
+        {
+            try
+            {
+                return await LoadFromFileAsync(cachePath);
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+        var manifest = await LoadFromUrlAsync(url);
+        if (!Sha1.Verify(manifest.Original, sha1))
+        {
+            throw new Exception("Downloaded client manifest failed integrity check.");
+        }
+        // ensure directory exists before saving
+        Directory.CreateDirectory(Path.GetDirectoryName(cachePath));
+        await File.WriteAllTextAsync(cachePath, manifest.Original);
+        return manifest;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
@@ -255,7 +281,6 @@ public class ClientManifest
     }
 }
 
-// ── Arguments ───────────────────────────────────────────────────────────
 
 public class Arguments
 {

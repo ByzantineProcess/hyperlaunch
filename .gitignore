@@ -4,3 +4,7 @@
 
 # slf4j loves logging in working dir
 logs/
+
+# cli builds
+bin/
+obj-cli/

@@ -2,7 +2,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Godot;
 
 namespace Hyperlaunch;
 
@@ -32,7 +31,7 @@ public class GameAccount
         var profileResponse = await Http.Client.SendAsync(profileRequest);
         profileResponse.EnsureSuccessStatusCode();
 
-        GD.Print("Successfully fetched Minecraft profile data. Response: " + await profileResponse.Content.ReadAsStringAsync());
+        Log.Print("Successfully fetched Minecraft profile data. Response: " + await profileResponse.Content.ReadAsStringAsync());
 
         return await profileResponse.Content.ReadFromJsonAsync<GameAccount>();
     }
@@ -40,7 +39,7 @@ public class GameAccount
     {
         string mcAccessToken = await MinecraftServices.ExchangeTokens(msAccessToken);
         var profileData = await FetchProfileAsync(mcAccessToken);
-        GD.Print("Successfully fetched Minecraft profile data for " + profileData.MinecraftUsername);
+        Log.Print("Successfully fetched Minecraft profile data for " + profileData.MinecraftUsername);
         profileData.MinecraftAccessToken = mcAccessToken;
         return profileData;
     }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Godot;
 
 namespace Hyperlaunch.Download;
 
@@ -49,7 +48,7 @@ public class AssetManifest
             }
             catch (System.Exception ex)
             {
-                GD.PrintErr($"Failed to load cached asset manifest for {id}: {ex.Message}. Will attempt to re-download.");
+                Log.PrintErr($"Failed to load cached asset manifest for {id}: {ex.Message}. Will attempt to re-download.");
             }
         }
         var manifest = await LoadFromUrlAndVerifyAsync(url, sha1, id);
