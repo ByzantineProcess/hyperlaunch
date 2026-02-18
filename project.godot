@@ -22,6 +22,8 @@ config/icon="uid://cmxi3m11en8fd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/energy_saving/keep_screen_on=false
+window/vsync/vsync_mode=0
 
 [dotnet]
 
