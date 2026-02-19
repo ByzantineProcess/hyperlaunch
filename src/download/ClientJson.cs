@@ -69,6 +69,8 @@ public class ClientManifest
     public string Type { get; set; }
 
     public string Original { get; private set; }
+    public bool IsModded { get; set; } = false;
+    public string BaseVersion { get; set; } = "";
 
     // ── Loading ─────────────────────────────────────────────────────────
 
@@ -81,40 +83,56 @@ public class ClientManifest
         return res;
     }
 
-    public static async Task<ClientManifest> LoadFromUrlAsync(string url)
+    public static async Task<ClientManifest> LoadFromVersionAsync(GameVersion version)
     {
-        string json = await Http.Client.GetStringAsync(url);
+        string json = await Http.Client.GetStringAsync(version.Url);
         ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
         res.Original = json;
         await res.AssetIndex.LoadIndexAsync();
         return res;
     }
 
-    public static async Task<ClientManifest> LoadFromUrlWithCacheAsync(string url, string sha1, string id)
+    public static async Task<ClientManifest> LoadFromVersionWithCacheAsync(GameVersion version)
     {
-        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/", $"{id}.json");
+        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/");
         if (File.Exists(cachePath))
         {
             try
             {
-                return await LoadFromFileAsync(cachePath);
+                return await LoadFromFileAsync(cachePath + $"{version.Id}.json");
             }
             catch
             {
             }
         }
-        var manifest = await LoadFromUrlAsync(url);
-        if (!Sha1.Verify(manifest.Original, sha1))
+        var manifest = await LoadFromVersionAsync(version);
+        if (!Sha1.Verify(manifest.Original, version.Sha1))
         {
             throw new Exception("Downloaded client manifest failed integrity check.");
         }
         // ensure directory exists before saving
         Directory.CreateDirectory(Path.GetDirectoryName(cachePath));
-        await File.WriteAllTextAsync(cachePath, manifest.Original);
+        await File.WriteAllTextAsync(cachePath + $"{version.Id}.json", manifest.Original);
+        if (version.IsModded)
+        {
+            manifest.IsModded = true;
+            manifest.BaseVersion = version.BaseVersion;
+            manifest.Id = version.Id; // modded versions have their id changed to baseVersionId + "-" + tag, but we want to preserve the original id for caching and integrity check purposes
+        }
         return manifest;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
+
+    /// <summary>Resolves logging argument for this version, returning null if logging is not configured or not supported on this version.</summary>
+    public string ResolveLoggingArgument(OsInfo os)
+    {
+        if (Logging == null || Logging.Client == null) return null;
+        // log xml files live in localappdata/.hyperlaunch/configs/logging/ID.json
+        string arg = Logging.Client.Argument;
+        arg = arg.Replace("${path}", Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "configs/logging/", $"{Id}.json"));
+        return arg;
+    }
 
     /// <summary>Returns flattened game arguments, evaluating rules against the supplied features.</summary>
     public List<string> ResolveGameArguments(FeatureSet features)
@@ -123,7 +141,7 @@ public class ClientManifest
         if (Arguments == null && MinecraftArguments != null)
             return MinecraftArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
 
-        return ResolveArgumentList(Arguments?.Game, features, os: null);
+        return ResolveArgumentList(Arguments?.Game, features, os: OsInfo.Detect());
     }
 
     /// <summary>Returns flattened JVM arguments, evaluating rules against the supplied OS info.</summary>
@@ -135,12 +153,13 @@ public class ClientManifest
             return new List<string>
             {
                 "-Djava.library.path=${natives_directory}",
+                ResolveLoggingArgument(os),
                 "-cp",
                 "${classpath}"
             };
         }
 
-        return ResolveArgumentList(Arguments.Jvm, features: null, os);
+        return ResolveArgumentList(Arguments.Jvm, features: null, os).Append(ResolveLoggingArgument(os)).ToList();
     }
 
     /// <summary>Returns all libraries whose rules pass for the given OS.</summary>
@@ -165,8 +184,18 @@ public class ClientManifest
             if (lib.Downloads?.Artifact != null)
                 paths.Add(Path.Combine(librariesDir, lib.Downloads.Artifact.Path.Replace('/', Path.DirectorySeparatorChar)));
         }
-        paths.Add(clientJarPath);
+        if (IsModded)
+        {
+            // if this is a modded version, swap the jar for the modded jar
+            string moddedClientJar = clientJarPath.Replace(BaseVersion, Id);
+            paths.Add(moddedClientJar);
+        }
+        else
+        {
+            paths.Add(clientJarPath);
+        }
         return string.Join(separator, paths);
+        
     }
 
     //<summary>Resolves all launch arguments at once. Returns a list of strings which are arguments to the JVM.\nResolved args are unformatted and may contain placeholders which need to be replaced by the caller.</summary>

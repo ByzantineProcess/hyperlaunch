@@ -110,7 +110,7 @@ public static class Program
 
         // Download
         Console.WriteLine($"Loading client manifest for {versionId}...");
-        ClientManifest clientManifest = await ClientManifest.LoadFromUrlAsync(version.Url);
+        ClientManifest clientManifest = await ClientManifest.LoadFromVersionAsync(version.Url);
         clientManifest.AssetIndex.Index.SaveInCorrectSpot();
 
         List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);

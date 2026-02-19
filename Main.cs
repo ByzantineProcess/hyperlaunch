@@ -32,7 +32,7 @@ public partial class Main : Control
         // attempt to launch the game (?)
         Jvm jvm = new Jvm("javaw"); // this will need to be changed to the actual java path later
         GameVersion latestVersion = VersionManifest.GetLatestRelease();
-        ClientManifest clientManifest = await ClientManifest.LoadFromUrlAsync(latestVersion.Url);
+        ClientManifest clientManifest = await ClientManifest.LoadFromVersionWithCacheAsync(latestVersion);
         clientManifest.AssetIndex.Index.SaveInCorrectSpot();
         List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
 
@@ -56,7 +56,7 @@ public partial class Main : Control
         LineEdit lineEdit = GetNode<LineEdit>("interactibles/LineEdit");
         string versionId = lineEdit.Text;
         GameVersion version = VersionManifest.GetVersionById(versionId);
-        ClientManifest clientManifest = await ClientManifest.LoadFromUrlAsync(version.Url);
+        ClientManifest clientManifest = await ClientManifest.LoadFromVersionWithCacheAsync(version);
         clientManifest.AssetIndex.Index.SaveInCorrectSpot();
         List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
         var progress = new Progress<long>(bytesRemaining =>

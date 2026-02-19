@@ -43,6 +43,13 @@ public class DownloadTask
             tasks.Add(new DownloadTask(url, destinationPath, asset.Sha1, asset.Size));
         }
 
+        if (clientManifest.Logging.Client != null)
+        {
+            var loggingUrl = clientManifest.Logging.Client.File.Url;
+            var loggingDestination = $"{BasePath}/configs/logging/{clientManifest.Logging.Client.File.Id}";
+            tasks.Add(new DownloadTask(loggingUrl, loggingDestination, clientManifest.Logging.Client.File.Sha1, clientManifest.Logging.Client.File.Size));
+        }
+
         var os = OsInfo.Detect();
         foreach (var library in clientManifest.ResolveLibraries(os))
         {

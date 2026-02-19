@@ -25,4 +25,6 @@ public class GameVersion
     
     [JsonPropertyName("complianceLevel")]
     public int ComplianceLevel { get; set; } = 0;
+    public bool IsModded = false;
+    public string BaseVersion { get; set; } = "";
 }

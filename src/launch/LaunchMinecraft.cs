@@ -17,7 +17,11 @@ public class LaunchMinecraft
             launchCommand = launchCommand.Select(arg => 
                 arg.Replace("/", "\\").Replace("\\\\", "\\")).ToList();
         }
-        
+        Log.Print("Resolved launch command:");
+        foreach (var arg in launchCommand)
+        {
+            Log.Print(arg);
+        }
         System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
         startInfo.FileName = jvm.ExecPath;
         // use ArgumentList to properly handle arguments with spaces

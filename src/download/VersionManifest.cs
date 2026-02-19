@@ -56,6 +56,19 @@ public static class VersionManifest
     // function to get a GameVersion by its id (e.g. "1.20.1")
     public static GameVersion GetVersionById(string id)
     {
+        // split id by : 
+        string[] parts = id.Split(':');
+        if (parts.Length == 2)
+        {
+            string baseVersionId = parts[0];
+            string tag = parts[1];
+            // get the base version
+            GameVersion baseVersion = GetVersionById(baseVersionId);
+            baseVersion.IsModded = true;
+            baseVersion.BaseVersion = baseVersionId;
+            baseVersion.Id = baseVersionId + "-" + tag;
+            return baseVersion;
+        }
         foreach (var version in Data.Versions)
         {
             if (version.Id == id)
