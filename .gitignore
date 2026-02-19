@@ -2,6 +2,10 @@
 .godot/
 /android/
 
+# Godot addons
+addons/
+*.kanban
+
 # slf4j loves logging in working dir
 logs/
 

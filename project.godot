@@ -8,15 +8,24 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="hyperlaunch"
 config/description="fastest minecraft launcher around."
 run/main_scene="uid://cxpbedlcj5vce"
-config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
+config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
+run/low_processor_mode=true
 boot_splash/bg_color=Color(0, 0, 0, 0)
 boot_splash/show_image=false
 config/icon="uid://cmxi3m11en8fd"
+
+[audio]
+
+driver/driver="Dummy"
 
 [display]
 
@@ -28,6 +37,15 @@ window/vsync/vsync_mode=0
 [dotnet]
 
 project/assembly_name="hyperlaunch"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/kanban_tasks/plugin.cfg")
+
+[physics]
+
+2d/physics_engine="Dummy"
+3d/physics_engine="Dummy"
 
 [rendering]
 

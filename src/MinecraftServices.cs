@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Hyperlaunch;
@@ -6,7 +7,7 @@ namespace Hyperlaunch;
 public static class MinecraftServices
 {
     // despite the name this is just for getting tokens
-    // everything specific to one account is handled by GameProfile.cs
+    // everything specific to one account is handled by GameAccount.cs
     public static async Task<string> ExchangeTokens(string msAccessToken)
     {
         // TODO: add trycatches to literally all of this 
@@ -31,7 +32,7 @@ public static class MinecraftServices
             Log.Print("Xbox Live authentication failed. Response: " + await xboxLiveResponse.Content.ReadAsStringAsync());
         }
         // GD.Print(await xboxLiveResponse.Content.ReadAsStringAsync());
-        var xboxLiveData = await xboxLiveResponse.Content.ReadFromJsonAsync<dynamic>();
+        var xboxLiveData = await xboxLiveResponse.Content.ReadFromJsonAsync<JsonElement>();
         string xboxLiveToken = xboxLiveData.GetProperty("Token").GetString();
         string userHash = xboxLiveData
             .GetProperty("DisplayClaims")
@@ -53,7 +54,7 @@ public static class MinecraftServices
         var xstsResponse = await Http.PostAsJsonAsync("https://xsts.auth.xboxlive.com/xsts/authorize", xstsRequestBody);
         if (xstsResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
-            var xstsErrorData = await xstsResponse.Content.ReadFromJsonAsync<dynamic>();
+            var xstsErrorData = await xstsResponse.Content.ReadFromJsonAsync<JsonElement>();
             uint xstsErrorCode = xstsErrorData.GetProperty("XErr").GetUInt32(); // freaky c# uint weirdness
             switch (xstsErrorCode)
             {
@@ -78,7 +79,7 @@ public static class MinecraftServices
         }
         xstsResponse.EnsureSuccessStatusCode();
         // GD.Print(await xstsResponse.Content.ReadAsStringAsync());
-        var xstsData = await xstsResponse.Content.ReadFromJsonAsync<dynamic>();
+        var xstsData = await xstsResponse.Content.ReadFromJsonAsync<JsonElement>();
         string xstsToken = xstsData.GetProperty("Token").GetString();
 
         if (!(xstsData.GetProperty("DisplayClaims").GetProperty("xui")[0].GetProperty("uhs").GetString() == userHash))
@@ -93,7 +94,7 @@ public static class MinecraftServices
         var mcLoginResponse = await Http.PostAsJsonAsync("https://api.minecraftservices.com/authentication/login_with_xbox", mcLoginRequestBody);
         mcLoginResponse.EnsureSuccessStatusCode();
         // GD.Print(await mcLoginResponse.Content.ReadAsStringAsync());
-        var mcLoginData = await mcLoginResponse.Content.ReadFromJsonAsync<dynamic>();
+        var mcLoginData = await mcLoginResponse.Content.ReadFromJsonAsync<JsonElement>();
         string mcAccessToken = mcLoginData.GetProperty("access_token").GetString();
 
         return mcAccessToken;

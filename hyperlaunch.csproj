@@ -1,11 +1,21 @@
-<Project Sdk="Godot.NET.Sdk/4.5.1">
+<Project Sdk="Godot.NET.Sdk/4.6.1">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <PublishTrimmed>false</PublishTrimmed>
-    <TrimMode>partial</TrimMode>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
     <PublishReadyToRun>false</PublishReadyToRun>
+
+    <!-- dev note: these settings relate to shrinking build sizes. -->
+    <!-- i do not know how well they will work long-term. -->
+
+    <!-- Suppress IL2026 warnings for reflection-based JSON serialisation (safe: types preserved via linker.xml) -->
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    <!-- Keep System.Text.Json reflection-based serialisation working (used throughout) -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- Godot's engine (native C++) calls into .NET via hostfxr; the trimmer disables this code path by default -->
+    <_EnableConsumingManagedCodeFromNativeHosting>true</_EnableConsumingManagedCodeFromNativeHosting>
   </PropertyGroup>
   <ItemGroup>
     <!-- Exclude the CLI entry point and its intermediate output from the Godot build -->
@@ -15,5 +25,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.81.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.81.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Tell the linker our assembly is a root (it has no entry point; Godot loads it dynamically) -->
+    <TrimmerRootAssembly Include="hyperlaunch" />
+    <!-- Preserve JSON-deserialised types and MSAL reflection targets -->
+    <TrimmerRootDescriptor Include="linker.xml" />
   </ItemGroup>
 </Project>

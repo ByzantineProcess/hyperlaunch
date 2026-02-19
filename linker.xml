@@ -1,0 +1,15 @@
+<linker>
+  <!-- Godot loads our assembly dynamically — preserve all Godot node types -->
+  <assembly fullname="hyperlaunch" preserve="all" />
+
+  <!-- GodotSharp is loaded dynamically by the engine — never trim it -->
+  <assembly fullname="GodotSharp" preserve="all" />
+
+  <!-- Godot loads assemblies via hostfxr → AssemblyLoadContext; preserve the loader infra -->
+  <assembly fullname="System.Runtime.Loader" preserve="all" />
+  <assembly fullname="System.Runtime.InteropServices" preserve="all" />
+
+  <!-- MSAL uses reflection heavily for token cache serialisation, ADAL compat, etc. -->
+  <assembly fullname="Microsoft.Identity.Client" preserve="all" />
+  <assembly fullname="Microsoft.Identity.Client.Extensions.Msal" preserve="all" />
+</linker>
