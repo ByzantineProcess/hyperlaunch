@@ -69,7 +69,7 @@ public partial class Main : Control
         string nativesDir = System.IO.Path.Combine(DownloadTask.BasePath, "natives/", clientManifest.Id);
         DownloadTask.ExtractNatives(clientManifest, nativesDir);
 
-        Jvm jvm = new Jvm("javaw");
+        Jvm jvm = Jvm.FindBestForVersion(clientManifest.JavaVersion?.MajorVersion ?? 21) ?? new Jvm("javaw");
         LaunchMinecraft.Launch(jvm, account, clientManifest);
     }
 }

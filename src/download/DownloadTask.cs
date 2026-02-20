@@ -17,13 +17,20 @@ public class DownloadTask
     public static readonly string BaseVersionPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "versions/");
     public string Url { get; set; }
     public string DestinationPath { get; set; }
-    public string ExpectedHash { get; set; }
+    public List<string> ExpectedHashes { get; set; }
     public long ExpectedSize { get; set; }
     public DownloadTask(string url, string destinationPath, string expectedHash, long expectedSize = 0)
     {
         Url = url;
         DestinationPath = destinationPath;
-        ExpectedHash = expectedHash;
+        ExpectedHashes = expectedHash != null ? new List<string> { expectedHash } : new List<string>();
+        ExpectedSize = expectedSize;
+    }
+    public DownloadTask(string url, string destinationPath, List<string> expectedHashes, long expectedSize = 0)
+    {
+        Url = url;
+        DestinationPath = destinationPath;
+        ExpectedHashes = expectedHashes ?? new List<string>();
         ExpectedSize = expectedSize;
     }
     public static List<DownloadTask> FromClientJson(ClientManifest clientManifest)
@@ -43,7 +50,7 @@ public class DownloadTask
             tasks.Add(new DownloadTask(url, destinationPath, asset.Sha1, asset.Size));
         }
 
-        if (clientManifest.Logging.Client != null)
+        if (clientManifest.Logging?.Client != null)
         {
             var loggingUrl = clientManifest.Logging.Client.File.Url;
             var loggingDestination = $"{BasePath}/configs/logging/{clientManifest.Logging.Client.File.Id}";
@@ -53,6 +60,18 @@ public class DownloadTask
         var os = OsInfo.Detect();
         foreach (var library in clientManifest.ResolveLibraries(os))
         {
+            // Download native classifier artifact for current platform
+            var nativeArtifact = library.GetNativeArtifact(os);
+            if (nativeArtifact != null)
+            {
+                var destinationPath = $"{BaseLibraryPath}/{nativeArtifact.Path}";
+                if (!System.IO.File.Exists(destinationPath))
+                {
+                    tasks.Add(new DownloadTask(nativeArtifact.Url, destinationPath, nativeArtifact.Sha1, nativeArtifact.Size));
+                    Log.Print($"Added download task for native artifact of library {library.Name} at URL {nativeArtifact.Url}");
+                }
+            }
+
             // Download main artifact
             if (library.Downloads?.Artifact != null)
             {
@@ -63,21 +82,25 @@ public class DownloadTask
                     tasks.Add(new DownloadTask(artifact.Url, destinationPath, artifact.Sha1, artifact.Size));
                 }
             }
-
-            // Download native classifier artifact for current platform
-            var nativeArtifact = library.GetNativeArtifact(os);
-            if (nativeArtifact != null)
+            else if (library.Name != null && library.Natives == null) // prefer not guessing URLs when natives are present
             {
-                var destinationPath = $"{BaseLibraryPath}/{nativeArtifact.Path}";
+                // Maven-style library: construct path and URL from name + optional repository url.
+                var expectedPath = library.GetExpectedPath();
+                var destinationPath = $"{BaseLibraryPath}/{expectedPath}";
                 if (!System.IO.File.Exists(destinationPath))
                 {
-                    tasks.Add(new DownloadTask(nativeArtifact.Url, destinationPath, nativeArtifact.Sha1, nativeArtifact.Size));
+                    var url = library.GetMavenDownloadUrl();
+                    var hashes = library.Checksums ?? new List<string>();
+                    tasks.Add(new DownloadTask(url, destinationPath, hashes));
                 }
             }
+
+            
         }
 
+        var jarVersion = clientManifest.JarVersion ?? clientManifest.Id;
         var mainJar = clientManifest.Downloads.Client;
-        var mainJarPath = $"{BaseVersionPath}/{clientManifest.Id}.jar";
+        var mainJarPath = $"{BaseVersionPath}/{jarVersion}.jar";
         if (!System.IO.File.Exists(mainJarPath))
         {
             tasks.Add(new DownloadTask(mainJar.Url, mainJarPath, mainJar.Sha1, mainJar.Size));
@@ -96,6 +119,11 @@ public class DownloadTask
                 // network concurrency is limited; hashing/IO remain unbounded
                 data = await Http.Client.GetByteArrayAsync(Url);
             }
+            catch (System.Exception ex)
+            {
+                Log.Print($"Error downloading {Url}: {ex.Message}");
+                throw;
+            }
             finally
             {
                 networkLimiter.Release();
@@ -106,9 +134,18 @@ public class DownloadTask
             data = await Http.Client.GetByteArrayAsync(Url);
         }
 
-        if (!Sha1.Verify(data, ExpectedHash))
+        if (ExpectedHashes.Count > 0 && !ExpectedHashes.Any(hash => Sha1.Verify(data, hash)))
         {
-            throw new System.Exception("Downloaded file failed integrity check.");
+            // some versions of forge (namely 1.8.9) have incorrect hashes in their manifests. 
+            // if the URL is from the main minecraft library repository, it's definitely wrong.
+            if (Url.StartsWith("https://libraries.minecraft.net/"))
+            {
+                throw new System.Exception($"Integrity check failed for {Url}, and since the URL is from the main minecraft library repository, the expected hash in the manifest is likely incorrect. Aborting download to avoid caching invalid file. Please report this to the modpack author.");
+            }
+            else
+            {
+                Log.Print($"Integrity check failed for {Url}, but since the URL is not from the main minecraft library repository, the expected hash in the manifest may be incorrect. Caching downloaded file anyway, but it may cause issues later. Please report this to the modpack author.");
+            }
         }
         // Directory is expected to be pre-created by ExecuteAllAsync;
         // create on demand only when called standalone.

@@ -68,18 +68,92 @@ public class ClientManifest
     [JsonPropertyName("type")]
     public string Type { get; set; }
 
+    #nullable enable
+    /// <summary>If set, this manifest inherits missing fields from the specified parent version (e.g. Forge inheriting from vanilla).</summary>
+    [JsonPropertyName("inheritsFrom")]
+    public string? InheritsFrom { get; set; }
+
+    /// <summary>If set, the client jar to use on the classpath comes from this version instead of Id (e.g. Forge reusing the vanilla jar).</summary>
+    [JsonPropertyName("jar")]
+    public string? JarVersion { get; set; }
+    #nullable disable
+
     public string Original { get; private set; }
     public bool IsModded { get; set; } = false;
     public string BaseVersion { get; set; } = "";
 
+    // ── Inheritance ──────────────────────────────────────────────────────
+
+    /// <summary>Merges this (child/modded) manifest onto a parent manifest, inheriting any fields that are null in the child.</summary>
+    public void MergeWithParent(ClientManifest parent)
+    {
+        // Merge argument lists: concatenate parent entries after child's so both sets are used.
+        if (parent.Arguments != null)
+        {
+            Arguments ??= new Arguments();
+            if (parent.Arguments.Game != null)
+            {
+                Arguments.Game ??= new List<ArgumentEntry>();
+                Arguments.Game.AddRange(parent.Arguments.Game);
+            }
+            if (parent.Arguments.Jvm != null)
+            {
+                Arguments.Jvm ??= new List<ArgumentEntry>();
+                Arguments.Jvm.AddRange(parent.Arguments.Jvm);
+            }
+        }
+
+        AssetIndex         ??= parent.AssetIndex;
+        AssetCollection    ??= parent.AssetCollection;
+        Downloads          ??= parent.Downloads;
+        JavaVersion        ??= parent.JavaVersion;
+        Logging            ??= parent.Logging;
+        MinecraftArguments ??= parent.MinecraftArguments;
+        MainClass          ??= parent.MainClass;
+        JarVersion         ??= parent.JarVersion;
+
+        // Concatenate libraries: child's first (higher priority), then parent's.
+        var merged = new List<Library>();
+        merged.AddRange(Libraries ?? new List<Library>());
+        merged.AddRange(parent.Libraries ?? new List<Library>());
+        Libraries = merged;
+
+        // Inherit numeric fields only when the child left them at default.
+        if (ComplianceLevel == 0) ComplianceLevel = parent.ComplianceLevel;
+        if (MinimumLauncherVersion == 0) MinimumLauncherVersion = parent.MinimumLauncherVersion;
+    }
+
     // ── Loading ─────────────────────────────────────────────────────────
 
-    public static async Task<ClientManifest> LoadFromFileAsync(string path)
+    public static async Task<ClientManifest> LoadFromFileAsync(string path, bool modded = false, string baseVersion = "", string moddedId = "")
     {
         string json = await File.ReadAllTextAsync(path);
         ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
         res.Original = json;
-        await res.AssetIndex.LoadIndexAsync();
+
+        // Handle inheritsFrom: load the parent manifest and merge inherited fields.
+        if (res.InheritsFrom != null)
+        {
+            Log.Print($"Manifest inherits from {res.InheritsFrom}, loading parent...");
+            var parentVersion = VersionManifest.GetVersionById(res.InheritsFrom);
+            var parent = await LoadFromVersionWithCacheAsync(parentVersion);
+            res.MergeWithParent(parent);
+        }
+
+        // Load asset index (may already be populated if inherited from a loaded parent).
+        if (res.AssetIndex != null && res.AssetIndex.Index == null)
+        {
+            await res.AssetIndex.LoadIndexAsync();
+        }
+
+        if (modded)
+        {
+            Log.Print("Version is modded, marking manifest as modded and setting base version");
+            res.IsModded = true;
+            res.BaseVersion = baseVersion;
+            res.Id = moddedId;
+        }
+        
         return res;
     }
 
@@ -88,23 +162,44 @@ public class ClientManifest
         string json = await Http.Client.GetStringAsync(version.Url);
         ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
         res.Original = json;
-        await res.AssetIndex.LoadIndexAsync();
+
+        // Handle inheritsFrom (unlikely from a URL, but supported for completeness).
+        if (res.InheritsFrom != null)
+        {
+            Log.Print($"Manifest inherits from {res.InheritsFrom}, loading parent...");
+            var parentVersion = VersionManifest.GetVersionById(res.InheritsFrom);
+            var parent = await LoadFromVersionWithCacheAsync(parentVersion);
+            res.MergeWithParent(parent);
+        }
+
+        if (res.AssetIndex != null && res.AssetIndex.Index == null)
+        {
+            await res.AssetIndex.LoadIndexAsync();
+        }
+
         return res;
     }
 
     public static async Task<ClientManifest> LoadFromVersionWithCacheAsync(GameVersion version)
     {
+        Log.Print($"Attempting to load client manifest for version {version.Id} from cache...");
         string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/");
-        if (File.Exists(cachePath))
+        if (File.Exists(cachePath + $"{version.Id}.json"))
         {
             try
             {
+                if (version.IsModded)
+                {
+                    return await LoadFromFileAsync(cachePath + $"{version.Id}.json", true, version.BaseVersion, version.Id);
+                }
                 return await LoadFromFileAsync(cachePath + $"{version.Id}.json");
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Print($"Failed to load client manifest from cache, will attempt to redownload. Error: {ex.Message}");
             }
         }
+        Log.Print($"Cache miss for client manifest at {cachePath + $"{version.Id}.json"}, downloading from {version.Url}...");
         var manifest = await LoadFromVersionAsync(version);
         if (!Sha1.Verify(manifest.Original, version.Sha1))
         {
@@ -115,9 +210,10 @@ public class ClientManifest
         await File.WriteAllTextAsync(cachePath + $"{version.Id}.json", manifest.Original);
         if (version.IsModded)
         {
+            Log.Print("Version is modded, marking manifest as modded and setting base version");
             manifest.IsModded = true;
             manifest.BaseVersion = version.BaseVersion;
-            manifest.Id = version.Id; // modded versions have their id changed to baseVersionId + "-" + tag, but we want to preserve the original id for caching and integrity check purposes
+            manifest.Id = version.Id + "-" + version.BaseVersion;
         }
         return manifest;
     }
@@ -183,19 +279,12 @@ public class ClientManifest
         {
             if (lib.Downloads?.Artifact != null)
                 paths.Add(Path.Combine(librariesDir, lib.Downloads.Artifact.Path.Replace('/', Path.DirectorySeparatorChar)));
+            else if (lib.Name != null)
+                // Maven-style library without explicit download info – derive path from coordinates.
+                paths.Add(Path.Combine(librariesDir, lib.GetExpectedPath().Replace('/', Path.DirectorySeparatorChar)));
         }
-        if (IsModded)
-        {
-            // if this is a modded version, swap the jar for the modded jar
-            string moddedClientJar = clientJarPath.Replace(BaseVersion, Id);
-            paths.Add(moddedClientJar);
-        }
-        else
-        {
-            paths.Add(clientJarPath);
-        }
+        paths.Add(clientJarPath);
         return string.Join(separator, paths);
-        
     }
 
     //<summary>Resolves all launch arguments at once. Returns a list of strings which are arguments to the JVM.\nResolved args are unformatted and may contain placeholders which need to be replaced by the caller.</summary>
@@ -205,8 +294,10 @@ public class ClientManifest
         OsInfo os = OsInfo.Detect();
         List<string> jvmArgs = ResolveJvmArguments(os);
         // libraries should already be resolved by the time we call this
-        // but we can still get a classpath 
-        string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}/{Id}.jar");
+        // but we can still get a classpath
+        // Use the jar key if set (e.g. Forge reuses the vanilla jar)
+        string jarVersion = JarVersion ?? Id;
+        string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}/{jarVersion}.jar");
         // make a directory for dumped native libs to go in
         string nativesDir = Path.Combine(DownloadTask.BasePath, "natives/", Id);
         Directory.CreateDirectory(nativesDir);
@@ -473,13 +564,13 @@ public class JavaVersionInfo
 
 public class Library
 {
-    [JsonPropertyName("downloads")]
-    public LibraryDownloads Downloads { get; set; }
-
     [JsonPropertyName("name")]
     public string Name { get; set; }
 
     #nullable enable
+    [JsonPropertyName("downloads")]
+    public LibraryDownloads? Downloads { get; set; }
+    
     [JsonPropertyName("url")]
     public string? Url { get; set; }
 
@@ -491,22 +582,32 @@ public class Library
 
     [JsonPropertyName("rules")]
     public List<Rule>? Rules { get; set; }
-    #nullable disable
 
-    /// <summary>Parses the maven-style name into groupId, artifactId, version.</summary>
-    public (string GroupId, string ArtifactId, string Version) ParseName()
-    {
-        var parts = Name.Split(':');
-        if (parts.Length < 3)
-            throw new FormatException($"Invalid library name format: {Name}");
-        return (parts[0], parts[1], parts[2]);
-    }
+    [JsonPropertyName("checksums")]
+    public List<string>? Checksums { get; set; }
+
+    [JsonPropertyName("serverreq")]
+    public bool? ServerRequired { get; set; }
+
+    [JsonPropertyName("clientreq")]
+    public bool? ClientRequired { get; set; }
+    #nullable disable
 
     /// <summary>Returns the expected path for this library relative to the libraries directory.</summary>
     public string GetExpectedPath()
     {
-        var (groupId, artifactId, version) = ParseName();
+        var parts = Name.Split(':');
+        if (parts.Length < 3)
+            throw new FormatException($"Invalid library name format: {Name}");
+        var groupId = parts[0];
+        var artifactId = parts[1];
+        var version = parts[2];
         var groupPath = groupId.Replace('.', '/');
+        if (Name.Contains("net.minecraftforge:forge"))
+        {
+            // old forge versions are stupid and dumb and bad
+            return $"{groupPath}/{artifactId}/{version}/{artifactId}-{version}-universal.jar";
+        }
         return $"{groupPath}/{artifactId}/{version}/{artifactId}-{version}.jar";
     }
 
@@ -515,17 +616,38 @@ public class Library
     {
         if (Natives == null) return null;
         if (!Natives.TryGetValue(os.Name, out var key)) return null;
-        return key.Replace("${arch}", os.Arch);
+        return key.Replace("${arch}", os.IntArch);
     }
 
     /// <summary>Gets the native classifier artifact for the given OS, or null if unavailable.</summary>
     public LibraryArtifact GetNativeArtifact(OsInfo os)
     {
+        Log.Print($"Attempting to get native artifact for library {Name} on OS {os.Name} {os.Arch}...");
         var key = GetNativeClassifierKey(os);
+        Log.Print($"Native classifier key for OS {os.Name} is {key}");
         if (key == null) return null;
         if (Downloads?.Classifiers == null) return null;
         Downloads.Classifiers.TryGetValue(key, out var artifact);
+        Log.Print(artifact != null
+            ? $"Found native artifact for library {Name} with classifier {key}: {artifact.Url}"
+            : $"No native artifact found for library {Name} with classifier {key}");
         return artifact;
+    }
+
+    /// <summary>
+    /// Returns the download URL for this library by constructing it from the Maven
+    /// coordinates (<see cref="Name"/>) and the optional repository base <see cref="Url"/>.
+    /// Falls back to the default Minecraft libraries CDN when no URL is specified.
+    /// </summary>
+    public string GetMavenDownloadUrl()
+    {
+        string baseUrl = Url ?? "https://libraries.minecraft.net/";
+        // warn if downloading from main URL since that likely means the manifest is missing download info and we're just guessing based on the name
+        if (baseUrl == "https://libraries.minecraft.net/")
+            Log.Print($"Warning: library {Name} has no URL specified, defaulting to {baseUrl}. This is probably not intended, and will likely fail to launch.");
+        if (!baseUrl.EndsWith("/")) baseUrl += "/";
+        Log.Print($"download URL for library {Name} should be {baseUrl + GetExpectedPath()}");
+        return baseUrl + GetExpectedPath();
     }
 }
 
@@ -615,6 +737,13 @@ public class OsInfo
     public string Name { get; set; }   // "windows", "osx", or "linux"
     public string Version { get; set; }
     public string Arch { get; set; }   // e.g. "x86", "x86_64"
+    public string IntArch => Arch switch
+    {
+        "x86" => "32",
+        "x86_64" => "64",
+        "aarch64" => "64",
+        _ => "64" // default to 64-bit if unknown, common enough nowadays
+    };
 
     public static OsInfo Detect()
     {

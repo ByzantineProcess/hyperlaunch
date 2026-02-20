@@ -64,9 +64,20 @@ public static class VersionManifest
             string tag = parts[1];
             // get the base version
             GameVersion baseVersion = GetVersionById(baseVersionId);
+            // Create a copy of the base version
+            baseVersion = new GameVersion
+            {
+                Id = baseVersion.Id,
+                Type = baseVersion.Type,
+                ReleaseTime = baseVersion.ReleaseTime,
+                Time = baseVersion.Time,
+                Sha1 = baseVersion.Sha1,
+                ComplianceLevel = baseVersion.ComplianceLevel
+            };
             baseVersion.IsModded = true;
             baseVersion.BaseVersion = baseVersionId;
             baseVersion.Id = baseVersionId + "-" + tag;
+            Log.Print($"Interpreted version id {baseVersion.Id} as modded version based on {baseVersionId} with tag {tag}");
             return baseVersion;
         }
         foreach (var version in Data.Versions)

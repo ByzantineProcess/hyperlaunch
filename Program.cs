@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -110,7 +111,7 @@ public static class Program
 
         // Download
         Console.WriteLine($"Loading client manifest for {versionId}...");
-        ClientManifest clientManifest = await ClientManifest.LoadFromVersionAsync(version.Url);
+        ClientManifest clientManifest = await ClientManifest.LoadFromVersionWithCacheAsync(version);
         clientManifest.AssetIndex.Index.SaveInCorrectSpot();
 
         List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
@@ -130,8 +131,18 @@ public static class Program
         DownloadTask.ExtractNatives(clientManifest, nativesDir);
 
         // Launch
-        string javaExecutable = System.OperatingSystem.IsWindows() ? "javaw" : "java";
-        Jvm jvm = new Jvm(javaExecutable);
+        int requiredJava = clientManifest.JavaVersion?.MajorVersion ?? 8;
+        Console.WriteLine($"Scanning for Java {requiredJava}+ installation...");
+        Jvm? jvm = Jvm.FindBestForVersion(requiredJava);
+        if (jvm == null)
+        {
+            Console.Error.WriteLine($"Error: could not find a Java {requiredJava} (or newer) installation.");
+            Console.Error.WriteLine("Please install the correct JDK and make sure it is on your PATH or");
+            Console.Error.WriteLine("installed in a standard location (e.g. C:\\Program Files\\Eclipse Adoptium).");
+            Environment.Exit(1);
+            return;
+        }
+        Console.WriteLine($"Using Java {jvm.Version} at: {jvm.ExecPath}");
         Console.WriteLine("Launching Minecraft...");
         LaunchMinecraft.Launch(jvm, account, clientManifest);
     }
