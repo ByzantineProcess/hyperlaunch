@@ -6,6 +6,9 @@
 addons/
 *.kanban
 
+# Godot export templates config
+export_presets.cfg
+
 # slf4j loves logging in working dir
 logs/
 

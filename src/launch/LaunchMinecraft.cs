@@ -30,18 +30,7 @@ public class LaunchMinecraft
             startInfo.ArgumentList.Add(arg);
         }
         startInfo.UseShellExecute = false;
-        startInfo.RedirectStandardOutput = true;
         startInfo.WorkingDirectory = DownloadTask.BasePath;
         var process = System.Diagnostics.Process.Start(startInfo);
-        // redirect stdout to a log file
-        System.IO.StreamWriter logStream = new System.IO.StreamWriter(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "game.log"));
-        process.OutputDataReceived += (sender, args) =>
-        {
-            if (args.Data != null)
-            {
-                logStream.WriteLine(args.Data);
-                logStream.Flush();
-            }
-        };
     }
 }

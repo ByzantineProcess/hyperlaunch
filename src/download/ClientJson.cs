@@ -188,6 +188,7 @@ public class ClientManifest
         {
             try
             {
+                Log.Print($"Found cached manifest for version {version.Id}!");
                 if (version.IsModded)
                 {
                     return await LoadFromFileAsync(cachePath + $"{version.Id}.json", true, version.BaseVersion, version.Id);
@@ -234,8 +235,10 @@ public class ClientManifest
     public List<string> ResolveGameArguments(FeatureSet features)
     {
         // Pre-1.13 format: single space-separated string, no rules
-        if (Arguments == null && MinecraftArguments != null)
+        if (MinecraftArguments != null)
+        {
             return MinecraftArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+        }
 
         return ResolveArgumentList(Arguments?.Game, features, os: OsInfo.Detect());
     }
@@ -244,7 +247,7 @@ public class ClientManifest
     public List<string> ResolveJvmArguments(OsInfo os)
     {
         // Pre-1.13 format: no JVM args in manifest, use sensible defaults
-        if (Arguments == null || Arguments.Jvm == null)
+        if (Arguments == null || Arguments.Jvm.Count == 0)
         {
             return new List<string>
             {
@@ -252,10 +255,10 @@ public class ClientManifest
                 ResolveLoggingArgument(os),
                 "-cp",
                 "${classpath}"
-            };
+            }.Where(a => a != null).ToList();
         }
 
-        return ResolveArgumentList(Arguments.Jvm, features: null, os).Append(ResolveLoggingArgument(os)).ToList();
+        return ResolveArgumentList(Arguments.Jvm, features: null, os).Append(ResolveLoggingArgument(os)).Where(a => a != null).ToList();
     }
 
     /// <summary>Returns all libraries whose rules pass for the given OS.</summary>
@@ -293,6 +296,11 @@ public class ClientManifest
         // first resolve JVM arguments with OS info since they may affect library selection
         OsInfo os = OsInfo.Detect();
         List<string> jvmArgs = ResolveJvmArguments(os);
+        Log.Print("Resolved JVM arguments:");
+        foreach (var arg in jvmArgs)
+        {
+            Log.Print(arg);
+        }
         // libraries should already be resolved by the time we call this
         // but we can still get a classpath
         // Use the jar key if set (e.g. Forge reuses the vanilla jar)

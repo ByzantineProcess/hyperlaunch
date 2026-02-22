@@ -161,7 +161,7 @@ public class DownloadTask
     /// Extracts native libraries from classifier JARs into the natives directory.
     /// Only extracts native files (.dll, .so, .dylib, .jnilib) while respecting ExtractRules.
     /// </summary>
-    public static void ExtractNatives(ClientManifest clientManifest, string nativesDir)
+    public static void ExtractNatives(ClientManifest clientManifest, string nativesDir, bool forceExtract = false)
     {
         var os = OsInfo.Detect();
         System.IO.Directory.CreateDirectory(nativesDir);
@@ -200,6 +200,10 @@ public class DownloadTask
                 if (ext == ".dll" || ext == ".so" || ext == ".dylib" || ext == ".jnilib")
                 {
                     var destPath = System.IO.Path.Combine(nativesDir, entry.Name);
+                    if (System.IO.File.Exists(destPath) && !forceExtract)
+                    {
+                        continue;
+                    }
                     entry.ExtractToFile(destPath, overwrite: true);
                 }
             }
