@@ -15,3 +15,4 @@ logs/
 # cli builds
 bin/
 obj-cli/
+.vscode/settings.json

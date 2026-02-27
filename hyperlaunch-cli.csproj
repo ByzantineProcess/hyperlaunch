@@ -13,6 +13,9 @@
   <ItemGroup>
     <!-- Exclude the Godot GUI entry point -->
     <Compile Remove="Main.cs" />
+    <!-- Exclude everything under godot-gui/ -->
+    <Compile Remove="godot-gui\**\*.cs" />
+    
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.81.0" />

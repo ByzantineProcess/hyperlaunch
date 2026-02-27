@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="hyperlaunch"
 config/description="fastest minecraft launcher around."
-run/main_scene="uid://cxpbedlcj5vce"
+run/main_scene="uid://bcqxxg66s4xa4"
 run/print_header=false
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 run/low_processor_mode=true

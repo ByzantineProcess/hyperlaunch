@@ -1,23 +1,38 @@
 [gd_scene format=3 uid="uid://bcqxxg66s4xa4"]
 
 [ext_resource type="Texture2D" uid="uid://caii35k6s6cx8" path="res://assets/logo transparent.png" id="1_3wqyh"]
+[ext_resource type="Script" uid="uid://dxraoxmyqmq4p" path="res://godot-gui/Main.cs" id="1_cl0jr"]
 
 [node name="Main" type="Control" unique_id=1155956868]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cl0jr")
 
 [node name="Title" type="Control" parent="." unique_id=417934287]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = 640.0
-offset_top = 59.0
-offset_right = 640.0
-offset_bottom = 59.0
 grow_horizontal = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="Title" unique_id=627830548]
 texture_filter = 1
+position = Vector2(0, 54.000008)
 scale = Vector2(2.63, 2.63)
 texture = ExtResource("1_3wqyh")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1884360327]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.040000003
+anchor_right = 0.5
+anchor_bottom = 0.68600005
+offset_left = -40.0
+offset_top = 106.19998
+offset_right = 40.0
+offset_bottom = 0.079956055
