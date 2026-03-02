@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cftvvov22tbmh"]
+
+[ext_resource type="Script" uid="uid://cwr3ugfrbumsu" path="res://godot-gui/router/Router.cs" id="1_x7fkx"]
+
+[node name="Router" type="Node" unique_id=2001171998]
+script = ExtResource("1_x7fkx")

@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://caii35k6s6cx8" path="res://assets/logo transparent.png" id="1_3wqyh"]
 [ext_resource type="Script" uid="uid://dxraoxmyqmq4p" path="res://godot-gui/Main.cs" id="1_cl0jr"]
 
-[node name="Main" type="Control" unique_id=1155956868]
+[node name="Root" type="Control" unique_id=1155956868]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,27 +12,108 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cl0jr")
 
-[node name="Title" type="Control" parent="." unique_id=417934287]
+[node name="Main" type="Control" parent="." unique_id=1602662641]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Border" type="Control" parent="Main" unique_id=251771012]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="Main/Border" unique_id=1071857955]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0)
+color = Color(0.14406255, 0.14406255, 0.14406255, 1)
+
+[node name="ColorRect2" type="ColorRect" parent="Main/Border" unique_id=622323554]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.965, 0.945)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+color = Color(0, 0, 0, 1)
+
+[node name="Control" type="Control" parent="Main/Border" unique_id=1173277945]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="Polygon2D" type="Polygon2D" parent="Main/Border/Control" unique_id=627417400]
+position = Vector2(0, 40.675)
+scale = Vector2(1.07, 1.26)
+color = Color(0.14509805, 0.14509805, 0.14509805, 1)
+offset = Vector2(18.73, 0)
+antialiased = true
+polygon = PackedVector2Array(0, 40, 168.00002, 40, 200, -32, -200, -32, -168.00002, 40)
+
+[node name="Title" type="Control" parent="Main" unique_id=417934287]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 grow_horizontal = 2
 
-[node name="Sprite2D" type="Sprite2D" parent="Title" unique_id=627830548]
+[node name="Sprite2D" type="Sprite2D" parent="Main/Title" unique_id=627830548]
 texture_filter = 1
-position = Vector2(0, 54.000008)
+position = Vector2(0, 47.00001)
 scale = Vector2(2.63, 2.63)
 texture = ExtResource("1_3wqyh")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1884360327]
+[node name="ColorRect" type="ColorRect" parent="Main" unique_id=1884360327]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
-anchor_top = 0.040000003
 anchor_right = 0.5
-anchor_bottom = 0.68600005
-offset_left = -40.0
-offset_top = 106.19998
-offset_right = 40.0
-offset_bottom = 0.079956055
+anchor_bottom = 0.675
+offset_left = -20.0
+offset_top = 122.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TooSmall" type="Control" parent="." unique_id=1064109965]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ErrorMessage" type="RichTextLabel" parent="TooSmall" unique_id=773394126]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -132.5
+offset_top = -37.5
+offset_right = 132.5
+offset_bottom = 37.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "This window is too small.
+Please resize it, or increase your display's resolution"
