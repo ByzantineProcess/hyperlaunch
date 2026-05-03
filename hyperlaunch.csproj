@@ -6,6 +6,7 @@
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
     <PublishReadyToRun>false</PublishReadyToRun>
+    <!-- <PublishAot>true</PublishAot> -->
 
     <!-- dev note: these settings relate to shrinking build sizes. -->
     <!-- i do not know how well they will work long-term. -->
@@ -27,9 +28,8 @@
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.81.0" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Tell the linker our assembly is a root (it has no entry point; Godot loads it dynamically) -->
     <TrimmerRootAssembly Include="hyperlaunch" />
-    <!-- Preserve JSON-deserialised types and MSAL reflection targets -->
-    <TrimmerRootDescriptor Include="linker.xml" />
+    <TrimmerRootAssembly Include="GodotSharp" />
+    <TrimmerRootDescriptor Include="linker.xml" Condition="'$(AssemblyName)' == 'hyperlaunch'" />
   </ItemGroup>
 </Project>

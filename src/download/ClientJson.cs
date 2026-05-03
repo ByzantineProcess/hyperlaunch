@@ -309,6 +309,7 @@ public class ClientManifest
         // make a directory for dumped native libs to go in
         string nativesDir = Path.Combine(DownloadTask.BasePath, "natives/", Id);
         Directory.CreateDirectory(nativesDir);
+        // TODO: find an authoritative list of placeholders, pretty sure i'm missing some
         jvmArgs = jvmArgs.Select(arg => arg
             .Replace("${launcher_name}", "Hyperlaunch")
             .Replace("${launcher_version}", "0.1")

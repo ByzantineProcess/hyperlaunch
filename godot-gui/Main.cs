@@ -9,11 +9,6 @@ public partial class Main : Control
         OnSizeChanged();
     }
 
-	public override void _Process(double delta)
-    {
-        
-    }
-
     public void OnSizeChanged()
     {
         if (GetWindow().Size.X < 900 || GetWindow().Size.Y < 500)

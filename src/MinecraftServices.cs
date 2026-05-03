@@ -62,13 +62,13 @@ public static class MinecraftServices
                    throw new System.Exception("This account is banned from Xbox.");
                 
                 case 2148916233:
-                    throw new System.Exception("This account doesn't have an Xbox profile. This is very odd if you own Minecraft on this account.");
+                    throw new System.Exception("This account doesn't have an Xbox profile. You probably don't own Minecraft on this account.");
                 
                 case 2148916235:
                     throw new System.Exception("Xbox Live is banned in this country/region.");
                 
                 case 2148916236 or 2148916237:
-                    throw new System.Exception("The account needs adult verification on Xbox page. (South Korea)");
+                    throw new System.Exception("The account needs adult verification on Xbox. (South Korea)");
                 
                 case 2148916238:
                     throw new System.Exception("The account is a child account and needs parental consent to access Xbox Live.");

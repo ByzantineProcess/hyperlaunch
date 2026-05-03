@@ -23,7 +23,7 @@ public static class MSAuth
             .WithLinuxKeyring(
                 "hyperlaunch",
                 MsalCacheHelper.LinuxKeyRingDefaultCollection,
-                "hyperlaunch token storage. stores Microsoft account tokens.",
+                "hyperlaunch",
                 new KeyValuePair<string, string>("Version", "0.1"),
                 new KeyValuePair<string, string>("Product", "Hyperlaunch"))
             .Build());

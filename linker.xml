@@ -1,15 +1,15 @@
 <linker>
-  <!-- Godot loads our assembly dynamically — preserve all Godot node types -->
-  <assembly fullname="hyperlaunch" preserve="all" />
+    <!-- Godot loads assemblies via hostfxr → AssemblyLoadContext; preserve the loader infra -->
+    <assembly fullname="System.Runtime.Loader" preserve="all" />
+    <assembly fullname="System.Runtime.InteropServices" preserve="all" />
 
-  <!-- GodotSharp is loaded dynamically by the engine — never trim it -->
-  <assembly fullname="GodotSharp" preserve="all" />
+    <!-- MSAL uses reflection heavily for token cache serialisation, ADAL compat, etc. -->
+    <assembly fullname="Microsoft.Identity.Client" preserve="all" />
+    <assembly fullname="Microsoft.Identity.Client.Extensions.Msal" preserve="all" />
 
-  <!-- Godot loads assemblies via hostfxr → AssemblyLoadContext; preserve the loader infra -->
-  <assembly fullname="System.Runtime.Loader" preserve="all" />
-  <assembly fullname="System.Runtime.InteropServices" preserve="all" />
-
-  <!-- MSAL uses reflection heavily for token cache serialisation, ADAL compat, etc. -->
-  <assembly fullname="Microsoft.Identity.Client" preserve="all" />
-  <assembly fullname="Microsoft.Identity.Client.Extensions.Msal" preserve="all" />
+    <!-- This is here for native AOT -->
+    <!-- Note: This sucks -->
+    <!-- TODO: remove this stupid thing and add json source generation instead -->
+    <type fullname="Hyperlaunch.*" preserve="all" />
+    <!-- <type fullname="System.Collections.Generic.List`1[[Hyperlaunch.*]]" preserve="all" /> -->
 </linker>

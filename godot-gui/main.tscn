@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://caii35k6s6cx8" path="res://assets/logo transparent.png" id="1_3wqyh"]
 [ext_resource type="Script" uid="uid://dxraoxmyqmq4p" path="res://godot-gui/Main.cs" id="1_cl0jr"]
+[ext_resource type="PackedScene" uid="uid://fpsrrvol1068" path="res://godot-gui/QuickplayOption.tscn" id="3_a573i"]
 
 [node name="Root" type="Control" unique_id=1155956868]
 layout_mode = 3
@@ -49,7 +50,14 @@ scale = Vector2(0.965, 0.945)
 pivot_offset_ratio = Vector2(0.5, 0.5)
 color = Color(0, 0, 0, 1)
 
-[node name="Control" type="Control" parent="Main/Border" unique_id=1173277945]
+[node name="Title" type="Control" parent="Main" unique_id=417934287]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="Control" type="Control" parent="Main/Title" unique_id=1173277945]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -60,7 +68,7 @@ offset_bottom = 40.0
 grow_horizontal = 2
 pivot_offset_ratio = Vector2(0.5, 0.5)
 
-[node name="Polygon2D" type="Polygon2D" parent="Main/Border/Control" unique_id=627417400]
+[node name="Polygon2D" type="Polygon2D" parent="Main/Title/Control" unique_id=627417400]
 position = Vector2(0, 40.675)
 scale = Vector2(1.07, 1.26)
 color = Color(0.14509805, 0.14509805, 0.14509805, 1)
@@ -68,30 +76,33 @@ offset = Vector2(18.73, 0)
 antialiased = true
 polygon = PackedVector2Array(0, 40, 168.00002, 40, 200, -32, -200, -32, -168.00002, 40)
 
-[node name="Title" type="Control" parent="Main" unique_id=417934287]
+[node name="Sprite2D" type="Sprite2D" parent="Main/Title" unique_id=627830548]
+texture_filter = 1
+position = Vector2(1, 46.00001)
+scale = Vector2(2.63, 2.63)
+texture = ExtResource("1_3wqyh")
+
+[node name="Quickplay" type="Control" parent="Main" unique_id=852556947]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
+offset_left = -192.0
+offset_top = 160.0
+offset_right = 192.0
+offset_bottom = 384.0
 grow_horizontal = 2
 
-[node name="Sprite2D" type="Sprite2D" parent="Main/Title" unique_id=627830548]
-texture_filter = 1
-position = Vector2(0, 47.00001)
-scale = Vector2(2.63, 2.63)
-texture = ExtResource("1_3wqyh")
-
-[node name="ColorRect" type="ColorRect" parent="Main" unique_id=1884360327]
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/Quickplay" unique_id=1554743556]
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.675
-offset_left = -20.0
-offset_top = 122.0
-offset_right = 20.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="QuickplayOption" parent="Main/Quickplay/VBoxContainer" unique_id=763704914 instance=ExtResource("3_a573i")]
+layout_mode = 2
 
 [node name="TooSmall" type="Control" parent="." unique_id=1064109965]
 visible = false

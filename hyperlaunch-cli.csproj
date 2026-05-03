@@ -7,6 +7,7 @@
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- <PublishAot>true</PublishAot> -->
     <!-- <PublishReadyToRun>false</PublishReadyToRun> -->
     <!-- <SelfContained>false</SelfContained> -->
   </PropertyGroup>
@@ -20,5 +21,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.81.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.81.0" />
+    
+  </ItemGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="hyperlaunch-cli" />
+    <TrimmerRootDescriptor Include="linker.xml" Condition="'$(AssemblyName)' == 'hyperlaunch-cli'" />
   </ItemGroup>
 </Project>

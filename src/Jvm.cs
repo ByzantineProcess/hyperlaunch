@@ -1,6 +1,6 @@
 
 // different versions of the game require different JVMs:
-//   Java 8  for anything using LaunchWrapper (Forge ≤ 1.12.2, old modded versions)
+//   Java 8  for anything using LaunchWrapper (Forge ≤ 1.12.2, other old modded versions?)
 //   Java 17 for 1.17–1.20
 //   Java 21 for 1.21+
 // Java 21 is NOT backwards-compatible with LaunchWrapper because it casts

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Hyperlaunch;
 using Hyperlaunch.Download;
@@ -17,12 +18,17 @@ public static class Program
             PrintUsage();
             return;
         }
+        bool forceModernJava = false;
+        if (args.Contains("--force-modern-java"))
+        {
+            forceModernJava = true;
+        }
 
         string command = args[0].ToLowerInvariant();
         switch (command)
         {
             case "launch":
-                await HandleLaunch(args);
+                await HandleLaunch(args, forceModernJava);
                 break;
 
             case "login":
@@ -39,6 +45,7 @@ public static class Program
                 Environment.Exit(1);
                 break;
         }
+        
     }
 
     static void PrintUsage()
@@ -85,7 +92,7 @@ public static class Program
         }
     }
 
-    static async Task HandleLaunch(string[] args)
+    static async Task HandleLaunch(string[] args, bool forceModernJava)
     {
         await Init();
 
@@ -132,6 +139,10 @@ public static class Program
 
         // Launch
         int requiredJava = clientManifest.JavaVersion?.MajorVersion ?? 8;
+        if (forceModernJava)
+        {
+            requiredJava = Math.Max(requiredJava, 25);
+        }
         Console.WriteLine($"Scanning for Java {requiredJava}+ installation...");
         Jvm? jvm = Jvm.FindBestForVersion(requiredJava);
         if (jvm == null)
