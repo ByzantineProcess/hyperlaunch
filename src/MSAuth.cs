@@ -24,7 +24,7 @@ public static class MSAuth
                 "hyperlaunch",
                 MsalCacheHelper.LinuxKeyRingDefaultCollection,
                 "hyperlaunch",
-                new KeyValuePair<string, string>("Version", "0.1"),
+                new KeyValuePair<string, string>("Version", "0.1"), // according to msal docs changing version invalidates older cache
                 new KeyValuePair<string, string>("Product", "Hyperlaunch"))
             .Build());
         
@@ -44,6 +44,7 @@ public static class MSAuth
     
     public static async Task<string> AuthenticateAsync()
     {
+        // TODO: gui
         var result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], deviceCodeResult =>
         {
             Log.Print($"To authenticate, visit {deviceCodeResult.VerificationUrl} and enter the code: {deviceCodeResult.UserCode}");

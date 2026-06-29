@@ -155,6 +155,6 @@ public static class Program
         }
         Console.WriteLine($"Using Java {jvm.Version} at: {jvm.ExecPath}");
         Console.WriteLine("Launching Minecraft...");
-        LaunchMinecraft.Launch(jvm, account, clientManifest);
+        LaunchMinecraft.Launch(jvm, account, clientManifest, includeDefaultJvmArgs: true);
     }
 }

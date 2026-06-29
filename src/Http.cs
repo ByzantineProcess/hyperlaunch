@@ -1,8 +1,11 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 namespace Hyperlaunch;
@@ -35,15 +38,14 @@ public static class Http
         return client;
     }
 
-    public static async Task<HttpResponseMessage> PostAsJsonAsync<T>(string url, T payload)
+    public static async Task<HttpResponseMessage> PostAsJsonAsync<T>(string url, T payload, JsonTypeInfo<T> jsonTypeInfo)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = null   // C# STOP CAMELCASING MY PRISTINELY PREPARED JSON
-        };
+        var memoryStream = new MemoryStream();
+        JsonSerializer.Serialize(memoryStream, payload, jsonTypeInfo);
+        memoryStream.Position = 0;
 
-        var json = JsonSerializer.Serialize(payload, options);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var content = new StreamContent(memoryStream);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
         return await Client.PostAsync(url, content);
     }

@@ -17,7 +17,7 @@ bin/
 obj-cli/
 .vscode/settings.json
 
-
+# milcygtaniyjbfbd (man i love configuring your gitignore to actually not include your java build files by default)
 agent/.gradle
 agent/build/
 agent/gradle/wrapper/gradle-wrapper.jar

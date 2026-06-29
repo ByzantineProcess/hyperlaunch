@@ -34,14 +34,14 @@ public static class VersionManifest
         if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
         {
             string cachedContent = await File.ReadAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.cache"));
-            _data = JsonSerializer.Deserialize<VersionManifestData>(cachedContent);
+            _data = JsonSerializer.Deserialize(cachedContent, Hyperlaunch.HyperlaunchJsonContext.Default.VersionManifestData);
             return;
         }
         else
         {
             response.EnsureSuccessStatusCode();
             string content = await response.Content.ReadAsStringAsync();
-            _data = JsonSerializer.Deserialize<VersionManifestData>(content);
+            _data = JsonSerializer.Deserialize(content, Hyperlaunch.HyperlaunchJsonContext.Default.VersionManifestData);
             if (response.Headers.TryGetValues("ETag", out var etagValues)) // response.Headers.ETag is null for some stupid reason
             {
                 string etag = string.Join("", etagValues);

@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Hyperlaunch.Download;
@@ -128,7 +129,7 @@ public class ClientManifest
     public static async Task<ClientManifest> LoadFromFileAsync(string path, bool modded = false, string baseVersion = "", string moddedId = "")
     {
         string json = await File.ReadAllTextAsync(path);
-        ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
+        ClientManifest res = JsonSerializer.Deserialize(json, Hyperlaunch.HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 
         // Handle inheritsFrom: load the parent manifest and merge inherited fields.
@@ -160,7 +161,7 @@ public class ClientManifest
     public static async Task<ClientManifest> LoadFromVersionAsync(GameVersion version)
     {
         string json = await Http.Client.GetStringAsync(version.Url);
-        ClientManifest res = JsonSerializer.Deserialize<ClientManifest>(json);
+        ClientManifest res = JsonSerializer.Deserialize(json, Hyperlaunch.HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 
         // Handle inheritsFrom (unlikely from a URL, but supported for completeness).
@@ -261,6 +262,16 @@ public class ClientManifest
         return ResolveArgumentList(Arguments.Jvm, features: null, os).Append(ResolveLoggingArgument(os)).Where(a => a != null).ToList();
     }
 
+    public List<string> ResolveDefaultJvmArguments(OsInfo os)
+    {
+        if (Arguments == null || Arguments.DefaultJvm.Count == 0)
+        {
+            return new List<string>{};
+        }
+
+        return ResolveArgumentList(Arguments.DefaultJvm, features: null, os).Where(a => a != null).ToList();
+    }
+
     /// <summary>Returns all libraries whose rules pass for the given OS.</summary>
     public List<Library> ResolveLibraries(OsInfo os)
     {
@@ -291,16 +302,11 @@ public class ClientManifest
     }
 
     //<summary>Resolves all launch arguments at once. Returns a list of strings which are arguments to the JVM.\nResolved args are unformatted and may contain placeholders which need to be replaced by the caller.</summary>
-    public List<string> ResolveLaunchCommand(GameAccount account)
+    public List<string> ResolveLaunchCommand(GameAccount account, bool includeDefaultJvmArgs = false)
     {
         // first resolve JVM arguments with OS info since they may affect library selection
         OsInfo os = OsInfo.Detect();
         List<string> jvmArgs = ResolveJvmArguments(os);
-        Log.Print("Resolved JVM arguments:");
-        foreach (var arg in jvmArgs)
-        {
-            Log.Print(arg);
-        }
         // libraries should already be resolved by the time we call this
         // but we can still get a classpath
         // Use the jar key if set (e.g. Forge reuses the vanilla jar)
@@ -332,7 +338,7 @@ public class ClientManifest
             .Replace("${natives_directory}", nativesDir)
             .Replace("${user_type}", "msa"))
             .ToList();
-        // remove xuid related placeholders since we don't have that info
+        // truthfully i have no idea what an xuid is
         gameArgs.Remove("${auth_xuid}");
         gameArgs.Remove("--xuid");
         // remove telemetry (?)
@@ -341,6 +347,13 @@ public class ClientManifest
         // the wiki has no idea what this does so just yeet it
         gameArgs.Remove("${user_properties}");
         gameArgs.Remove("--userProperties");
+
+        if (includeDefaultJvmArgs)
+        {
+            List<string> defaultJvmArgs = ResolveDefaultJvmArguments(os);
+            jvmArgs = jvmArgs.Concat(defaultJvmArgs).ToList();
+        }
+
         // build final command: JVM args + main class + game args
         return jvmArgs.Append(MainClass).Concat(gameArgs).ToList();
     }
@@ -382,7 +395,12 @@ public class ClientManifest
                     matches = false;
                 if (rule.Os.Version != null && os.Version != null)
                 {
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(os.Version, rule.Os.Version))
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(os.Version.ToString(), rule.Os.Version))
+                        matches = false;
+                }
+                if (rule.Os.VersionRange != null && os.Version != null)
+                {
+                    if (!SemanticVersionParser.Parse(rule.Os.VersionRange, os.Version))
                         matches = false;
                 }
             }
@@ -407,433 +425,5 @@ public class ClientManifest
                 allowed = rule.Action == "allow";
         }
         return allowed;
-    }
-}
-
-
-public class Arguments
-{
-    [JsonPropertyName("game")]
-    public List<ArgumentEntry> Game { get; set; }
-
-    [JsonPropertyName("jvm")]
-    public List<ArgumentEntry> Jvm { get; set; }
-}
-
-/// <summary>
-/// Represents a single argument entry which is either a plain string
-/// or a conditional argument with rules and a value.
-/// </summary>
-[JsonConverter(typeof(ArgumentEntryConverter))]
-public class ArgumentEntry
-{
-    #nullable enable
-    public string? PlainValue { get; set; }
-    public ConditionalArgument? Conditional { get; set; }
-    #nullable disable
-
-    public bool IsConditional => Conditional != null;
-}
-
-public class ConditionalArgument
-{
-    [JsonPropertyName("rules")]
-    public List<Rule> Rules { get; set; }
-
-    /// <summary>Normalised to a list even when the JSON field is a single string.</summary>
-    [JsonPropertyName("value")]
-    [JsonConverter(typeof(StringOrStringListConverter))]
-    public List<string> Value { get; set; }
-}
-
-// ── Rules ───────────────────────────────────────────────────────────────
-
-public class Rule
-{
-    [JsonPropertyName("action")]
-    public string Action { get; set; }
-
-    #nullable enable
-    [JsonPropertyName("features")]
-    public RuleFeatures? Features { get; set; }
-
-    [JsonPropertyName("os")]
-    public RuleOs? Os { get; set; }
-    #nullable disable
-}
-
-public class RuleFeatures
-{
-    [JsonPropertyName("is_demo_user")]
-    public bool? IsDemoUser { get; set; }
-
-    [JsonPropertyName("has_custom_resolution")]
-    public bool? HasCustomResolution { get; set; }
-
-    [JsonPropertyName("has_quick_plays_support")]
-    public bool? HasQuickPlaysSupport { get; set; }
-
-    [JsonPropertyName("is_quick_play_singleplayer")]
-    public bool? IsQuickPlaySingleplayer { get; set; }
-
-    [JsonPropertyName("is_quick_play_multiplayer")]
-    public bool? IsQuickPlayMultiplayer { get; set; }
-
-    [JsonPropertyName("is_quick_play_realms")]
-    public bool? IsQuickPlayRealms { get; set; }
-}
-
-public class RuleOs
-{
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
-
-    #nullable enable
-    [JsonPropertyName("version")]
-    public string? Version { get; set; }
-
-    [JsonPropertyName("arch")]
-    public string? Arch { get; set; }
-    #nullable disable
-}
-
-// ── Asset index ─────────────────────────────────────────────────────────
-
-public class AssetIndex
-{
-    [JsonPropertyName("id")]
-    public string Id { get; set; }
-
-    [JsonPropertyName("sha1")]
-    public string Sha1 { get; set; }
-
-    [JsonPropertyName("size")]
-    public int Size { get; set; }
-
-    [JsonPropertyName("totalSize")]
-    public int TotalSize { get; set; }
-
-    [JsonPropertyName("url")]
-    public string Url { get; set; }
-
-    public AssetManifest Index { get; private set; }
-
-    public async Task LoadIndexAsync()
-    {
-        Index = await AssetManifest.SmartLoadAsync(Url, Sha1, Id);
-    }
-}
-
-// ── Downloads ───────────────────────────────────────────────────────────
-
-public class ClientDownloads
-{
-    [JsonPropertyName("client")]
-    public DownloadInfo Client { get; set; }
-
-    #nullable enable
-    [JsonPropertyName("client_mappings")]
-    public DownloadInfo? ClientMappings { get; set; }
-
-    [JsonPropertyName("server")]
-    public DownloadInfo? Server { get; set; }
-
-    [JsonPropertyName("server_mappings")]
-    public DownloadInfo? ServerMappings { get; set; }
-
-    [JsonPropertyName("windows_server")]
-    public DownloadInfo? WindowsServer { get; set; }
-    #nullable disable
-}
-
-public class DownloadInfo
-{
-    [JsonPropertyName("sha1")]
-    public string Sha1 { get; set; }
-
-    [JsonPropertyName("size")]
-    public int Size { get; set; }
-
-    [JsonPropertyName("url")]
-    public string Url { get; set; }
-}
-
-// ── Java version ────────────────────────────────────────────────────────
-
-public class JavaVersionInfo
-{
-    [JsonPropertyName("component")]
-    public string Component { get; set; }
-
-    [JsonPropertyName("majorVersion")]
-    public int MajorVersion { get; set; }
-}
-
-// ── Libraries ───────────────────────────────────────────────────────────
-
-public class Library
-{
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
-
-    #nullable enable
-    [JsonPropertyName("downloads")]
-    public LibraryDownloads? Downloads { get; set; }
-    
-    [JsonPropertyName("url")]
-    public string? Url { get; set; }
-
-    [JsonPropertyName("natives")]
-    public Dictionary<string, string>? Natives { get; set; }
-
-    [JsonPropertyName("extract")]
-    public ExtractRules? Extract { get; set; }
-
-    [JsonPropertyName("rules")]
-    public List<Rule>? Rules { get; set; }
-
-    [JsonPropertyName("checksums")]
-    public List<string>? Checksums { get; set; }
-
-    [JsonPropertyName("serverreq")]
-    public bool? ServerRequired { get; set; }
-
-    [JsonPropertyName("clientreq")]
-    public bool? ClientRequired { get; set; }
-    #nullable disable
-
-    /// <summary>Returns the expected path for this library relative to the libraries directory.</summary>
-    public string GetExpectedPath()
-    {
-        var parts = Name.Split(':');
-        if (parts.Length < 3)
-            throw new FormatException($"Invalid library name format: {Name}");
-        var groupId = parts[0];
-        var artifactId = parts[1];
-        var version = parts[2];
-        var groupPath = groupId.Replace('.', '/');
-        if (Name.Contains("net.minecraftforge:forge"))
-        {
-            // old forge versions are stupid and dumb and bad
-            return $"{groupPath}/{artifactId}/{version}/{artifactId}-{version}-universal.jar";
-        }
-        return $"{groupPath}/{artifactId}/{version}/{artifactId}-{version}.jar";
-    }
-
-    /// <summary>Gets the native classifier key for the given OS, or null if no natives exist for this OS.</summary>
-    public string GetNativeClassifierKey(OsInfo os)
-    {
-        if (Natives == null) return null;
-        if (!Natives.TryGetValue(os.Name, out var key)) return null;
-        return key.Replace("${arch}", os.IntArch);
-    }
-
-    /// <summary>Gets the native classifier artifact for the given OS, or null if unavailable.</summary>
-    public LibraryArtifact GetNativeArtifact(OsInfo os)
-    {
-        Log.Print($"Attempting to get native artifact for library {Name} on OS {os.Name} {os.Arch}...");
-        var key = GetNativeClassifierKey(os);
-        Log.Print($"Native classifier key for OS {os.Name} is {key}");
-        if (key == null) return null;
-        if (Downloads?.Classifiers == null) return null;
-        Downloads.Classifiers.TryGetValue(key, out var artifact);
-        Log.Print(artifact != null
-            ? $"Found native artifact for library {Name} with classifier {key}: {artifact.Url}"
-            : $"No native artifact found for library {Name} with classifier {key}");
-        return artifact;
-    }
-
-    /// <summary>
-    /// Returns the download URL for this library by constructing it from the Maven
-    /// coordinates (<see cref="Name"/>) and the optional repository base <see cref="Url"/>.
-    /// Falls back to the default Minecraft libraries CDN when no URL is specified.
-    /// </summary>
-    public string GetMavenDownloadUrl()
-    {
-        string baseUrl = Url ?? "https://libraries.minecraft.net/";
-        // warn if downloading from main URL since that likely means the manifest is missing download info and we're just guessing based on the name
-        if (baseUrl == "https://libraries.minecraft.net/")
-            Log.Print($"Warning: library {Name} has no URL specified, defaulting to {baseUrl}. This is probably not intended, and will likely fail to launch.");
-        if (!baseUrl.EndsWith("/")) baseUrl += "/";
-        Log.Print($"download URL for library {Name} should be {baseUrl + GetExpectedPath()}");
-        return baseUrl + GetExpectedPath();
-    }
-}
-
-public class LibraryDownloads
-{
-    #nullable enable
-    [JsonPropertyName("artifact")]
-    public LibraryArtifact? Artifact { get; set; }
-
-    [JsonPropertyName("classifiers")]
-    public Dictionary<string, LibraryArtifact>? Classifiers { get; set; }
-    #nullable disable
-}
-
-public class LibraryArtifact
-{
-    [JsonPropertyName("path")]
-    public string Path { get; set; }
-
-    [JsonPropertyName("sha1")]
-    public string Sha1 { get; set; }
-
-    [JsonPropertyName("size")]
-    public int Size { get; set; }
-
-    [JsonPropertyName("url")]
-    public string Url { get; set; }
-}
-
-public class ExtractRules
-{
-    [JsonPropertyName("exclude")]
-    public List<string> Exclude { get; set; }
-}
-
-// ── Logging ─────────────────────────────────────────────────────────────
-
-public class LoggingConfig
-{
-    [JsonPropertyName("client")]
-    public LoggingClient Client { get; set; }
-}
-
-public class LoggingClient
-{
-    [JsonPropertyName("argument")]
-    public string Argument { get; set; }
-
-    [JsonPropertyName("file")]
-    public LoggingFile File { get; set; }
-
-    [JsonPropertyName("type")]
-    public string Type { get; set; }
-}
-
-public class LoggingFile
-{
-    [JsonPropertyName("id")]
-    public string Id { get; set; }
-
-    [JsonPropertyName("sha1")]
-    public string Sha1 { get; set; }
-
-    [JsonPropertyName("size")]
-    public int Size { get; set; }
-
-    [JsonPropertyName("url")]
-    public string Url { get; set; }
-}
-
-// ── Helper types for rule evaluation ────────────────────────────────────
-
-/// <summary>Feature flags to check when resolving game arguments.</summary>
-public class FeatureSet
-{
-    public bool IsDemoUser { get; set; }
-    public bool HasCustomResolution { get; set; }
-    public bool HasQuickPlaysSupport { get; set; }
-    public bool IsQuickPlaySingleplayer { get; set; }
-    public bool IsQuickPlayMultiplayer { get; set; }
-    public bool IsQuickPlayRealms { get; set; }
-}
-
-/// <summary>Current OS information for JVM argument and library resolution.</summary>
-public class OsInfo
-{
-    public string Name { get; set; }   // "windows", "osx", or "linux"
-    public string Version { get; set; }
-    public string Arch { get; set; }   // e.g. "x86", "x86_64"
-    public string IntArch => Arch switch
-    {
-        "x86" => "32",
-        "x86_64" => "64",
-        "aarch64" => "64",
-        _ => "64" // default to 64-bit if unknown, common enough nowadays
-    };
-
-    public static OsInfo Detect()
-    {
-        string name;
-        if (OperatingSystem.IsWindows()) name = "windows";
-        else if (OperatingSystem.IsMacOS()) name = "osx";
-        else name = "linux";
-
-        return new OsInfo
-        {
-            Name = name,
-            Version = Environment.OSVersion.Version.ToString(),
-            Arch = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture switch
-            {
-                System.Runtime.InteropServices.Architecture.X86 => "x86",
-                System.Runtime.InteropServices.Architecture.X64 => "x86_64",
-                System.Runtime.InteropServices.Architecture.Arm64 => "aarch64",
-                _ => "unknown"
-            }
-        };
-    }
-}
-
-// ── JSON converters ─────────────────────────────────────────────────────
-
-/// <summary>
-/// Handles argument list entries which can be either a plain JSON string
-/// or a JSON object with "rules" and "value" fields.
-/// </summary>
-public class ArgumentEntryConverter : JsonConverter<ArgumentEntry>
-{
-    public override ArgumentEntry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        if (reader.TokenType == JsonTokenType.String)
-        {
-            return new ArgumentEntry { PlainValue = reader.GetString() };
-        }
-
-        var conditional = JsonSerializer.Deserialize<ConditionalArgument>(ref reader, options);
-        return new ArgumentEntry { Conditional = conditional };
-    }
-
-    public override void Write(Utf8JsonWriter writer, ArgumentEntry value, JsonSerializerOptions options)
-    {
-        if (!value.IsConditional)
-            writer.WriteStringValue(value.PlainValue);
-        else
-            JsonSerializer.Serialize(writer, value.Conditional, options);
-    }
-}
-
-/// <summary>
-/// Handles the "value" field in conditional arguments which can be either
-/// a single JSON string or an array of strings.
-/// </summary>
-public class StringOrStringListConverter : JsonConverter<List<string>>
-{
-    public override List<string> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        if (reader.TokenType == JsonTokenType.String)
-        {
-            return new List<string> { reader.GetString() };
-        }
-
-        var list = new List<string>();
-        if (reader.TokenType == JsonTokenType.StartArray)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndArray) break;
-                list.Add(reader.GetString());
-            }
-        }
-        return list;
-    }
-
-    public override void Write(Utf8JsonWriter writer, List<string> value, JsonSerializerOptions options)
-    {
-        if (value.Count == 1)
-            writer.WriteStringValue(value[0]);
-        else
-            JsonSerializer.Serialize(writer, value, options);
     }
 }

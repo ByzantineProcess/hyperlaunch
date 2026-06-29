@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Hyperlaunch.Settings;
 
-// this class ai generated because no one knows about c# singletons online apparently
+// this class is partially ai generated because stack overflow was unaware of a good c# singleton pattern
 public static class SettingsContainer
 {
     private static readonly object Sync = new();
@@ -80,16 +80,16 @@ public class SettingsClass
             return new SettingsClass();
         }
         string settingsProfileSerialised = await File.ReadAllTextAsync(filepath);
-        return JsonSerializer.Deserialize<SettingsClass>(settingsProfileSerialised);
+        return JsonSerializer.Deserialize(settingsProfileSerialised, Hyperlaunch.HyperlaunchJsonContext.Default.SettingsClass);
     }
     public async Task SaveToFile(string filepath)
     {
-        string settingsProfileSerialised = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+        string settingsProfileSerialised = JsonSerializer.Serialize(this, Hyperlaunch.HyperlaunchJsonContext.Default.SettingsClass);
         await File.WriteAllTextAsync(filepath, settingsProfileSerialised);
     }
     public string SaveToString()
     {
-        return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(this, Hyperlaunch.HyperlaunchJsonContext.Default.SettingsClass);
     }
     public SettingsClass()
     {

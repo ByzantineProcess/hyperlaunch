@@ -33,7 +33,7 @@ public class GameAccount
 
         Log.Print("Successfully fetched Minecraft profile data. Response: " + await profileResponse.Content.ReadAsStringAsync());
 
-        return await profileResponse.Content.ReadFromJsonAsync<GameAccount>();
+        return await profileResponse.Content.ReadFromJsonAsync(HyperlaunchJsonContext.Default.GameAccount);
     }
     public static async Task<GameAccount> CreateAsync(string msAccessToken)
     {

@@ -14,7 +14,7 @@ public class AssetManifest
     public string Id { get; private set; }
     public static AssetManifest LoadFromJson(string json, string id)
     {
-        var manifest = System.Text.Json.JsonSerializer.Deserialize<AssetManifest>(json);
+        var manifest = System.Text.Json.JsonSerializer.Deserialize(json, Hyperlaunch.HyperlaunchJsonContext.Default.AssetManifest);
         manifest.Original = json;
         manifest.Id = id;
         return manifest;

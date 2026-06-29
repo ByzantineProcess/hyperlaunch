@@ -7,10 +7,10 @@ namespace Hyperlaunch.Launch;
 
 public class LaunchMinecraft
 {
-    public static void Launch(Jvm jvm, GameAccount account, ClientManifest clientManifest)
+    public static void Launch(Jvm jvm, GameAccount account, ClientManifest clientManifest, bool includeDefaultJvmArgs = false)
     {
         // resolve launch command from client manifest
-        List<string> launchCommand = clientManifest.ResolveLaunchCommand(account);
+        List<string> launchCommand = clientManifest.ResolveLaunchCommand(account, includeDefaultJvmArgs);
         // if on windows, normalise all / to \ in arguments
         if (OsInfo.Detect().Name == "windows")
         {
