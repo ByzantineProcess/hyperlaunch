@@ -3,8 +3,6 @@
 // then just gave up and told claude to do it
 // i have looked over it and it should all be fine
 
-// should i move every class to its own file? 
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -402,6 +400,8 @@ public class ClientManifest
                 {
                     if (!SemanticVersionParser.Parse(rule.Os.VersionRange, os.Version))
                         matches = false;
+                    
+                    // Console.WriteLine($"os version check: os version {os.Version} returned {SemanticVersionParser.Parse(rule.Os.VersionRange, os.Version)}");
                 }
             }
 

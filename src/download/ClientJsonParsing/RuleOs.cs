@@ -16,5 +16,4 @@ public class RuleOs
 
     [JsonPropertyName("versionRange")]
     public VersionRange? VersionRange { get; set; }
-    #nullable disable
 }

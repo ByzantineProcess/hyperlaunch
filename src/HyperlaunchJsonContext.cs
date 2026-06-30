@@ -42,6 +42,7 @@ namespace Hyperlaunch;
 [JsonSerializable(typeof(XstsAuthRequest))]
 [JsonSerializable(typeof(XstsAuthProperties))]
 [JsonSerializable(typeof(MinecraftLoginRequest))]
+[JsonSerializable(typeof(VersionRange))]
 public partial class HyperlaunchJsonContext : JsonSerializerContext
 {
 }
