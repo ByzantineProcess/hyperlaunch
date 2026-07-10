@@ -7,6 +7,8 @@
 // ClassLoader.getSystemClassLoader() directly to URLClassLoader, which
 // broke in Java 9 when AppClassLoader stopped extending URLClassLoader.
 
+// this class mostly ai generated
+
 #nullable enable
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 public class Jvm
 {
@@ -30,14 +33,14 @@ public class Jvm
     public Jvm(string execPath)
     {
         ExecPath = execPath;
-        Version  = DetectVersion(execPath);
+        Version  = DetectVersion(execPath).Result;
     }
 
     /// <summary>
     /// Runs <c>java -version</c> and parses the major version number.
     /// Returns 0 if the version cannot be determined.
     /// </summary>
-    public static int DetectVersion(string execPath)
+    public static async Task<int> DetectVersion(string execPath)
     {
         try
         {
@@ -51,7 +54,7 @@ public class Jvm
             using var proc = Process.Start(psi)!; // non-null: UseShellExecute=false always returns a Process
             // version info comes on stderr for all JVM implementations
             string output = proc.StandardError.ReadToEnd();
-            proc.WaitForExit();
+            await proc.WaitForExitAsync();
 
             // Examples:
             //   java version "1.8.0_401"   → major 8
@@ -69,7 +72,7 @@ public class Jvm
     /// Scans all common JVM installation directories on the current OS and
     /// returns every JVM found, sorted by major version descending.
     /// </summary>
-    public static List<Jvm> ScanForJvms()
+    public static async Task<List<Jvm>> ScanForJvms()
     {
         var candidates = new List<string>();
 
@@ -142,7 +145,7 @@ public class Jvm
         foreach (string path in candidates)
         {
             if (!seen.Add(path)) continue;
-            int v = DetectVersion(path);
+            int v = await DetectVersion(path);
             if (v > 0) results.Add(new Jvm(path, v));
         }
 
@@ -155,10 +158,17 @@ public class Jvm
     /// so that e.g. Java 8 is chosen over Java 21 when 8 is needed,
     /// maximising compatibility with legacy LaunchWrapper code.
     /// </summary>
-    public static Jvm? FindBestForVersion(int requiredMajor)
+    public static async Task<Jvm?> FindBestForVersion(int requiredMajor)
     {
-        var all = ScanForJvms();
+        var all = await ScanForJvms();
         return all
+            .Where(j => j.Version >= requiredMajor)
+            .OrderBy(j => j.Version)   // lowest satisfying version first
+            .FirstOrDefault();
+    }
+    public static Jvm? FindBestForVersion(int requiredMajor, List<Jvm> jvms)
+    {
+        return jvms
             .Where(j => j.Version >= requiredMajor)
             .OrderBy(j => j.Version)   // lowest satisfying version first
             .FirstOrDefault();

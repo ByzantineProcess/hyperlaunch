@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch.Download;
 
@@ -14,14 +15,14 @@ public class AssetManifest
     public string Id { get; private set; }
     public static AssetManifest LoadFromJson(string json, string id)
     {
-        var manifest = System.Text.Json.JsonSerializer.Deserialize(json, Hyperlaunch.HyperlaunchJsonContext.Default.AssetManifest);
+        var manifest = System.Text.Json.JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.AssetManifest);
         manifest.Original = json;
         manifest.Id = id;
         return manifest;
     }
     public static async Task<AssetManifest> LoadFromUrlAndVerifyAsync(string url, string sha1, string id)
     {
-        string json = await Http.Client.GetStringAsync(url);
+        string json = await CacheEverything.SmartGetString(url);
         if (!Sha1.Verify(json, sha1))
         {
             throw new System.Exception("Asset manifest failed integrity check.");

@@ -11,6 +11,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Hyperlaunch.Instances;
+using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch.Download;
 
@@ -100,6 +102,11 @@ public class ClientManifest
                 Arguments.Jvm ??= new List<ArgumentEntry>();
                 Arguments.Jvm.AddRange(parent.Arguments.Jvm);
             }
+            if (parent.Arguments.DefaultJvm != null)
+            {
+                Arguments.DefaultJvm ??= new List<ArgumentEntry>();
+                Arguments.DefaultJvm.AddRange(parent.Arguments.DefaultJvm);
+            }
         }
 
         AssetIndex         ??= parent.AssetIndex;
@@ -127,7 +134,7 @@ public class ClientManifest
     public static async Task<ClientManifest> LoadFromFileAsync(string path, bool modded = false, string baseVersion = "", string moddedId = "")
     {
         string json = await File.ReadAllTextAsync(path);
-        ClientManifest res = JsonSerializer.Deserialize(json, Hyperlaunch.HyperlaunchJsonContext.Default.ClientManifest);
+        ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 
         // Handle inheritsFrom: load the parent manifest and merge inherited fields.
@@ -158,8 +165,8 @@ public class ClientManifest
 
     public static async Task<ClientManifest> LoadFromVersionAsync(GameVersion version)
     {
-        string json = await Http.Client.GetStringAsync(version.Url);
-        ClientManifest res = JsonSerializer.Deserialize(json, Hyperlaunch.HyperlaunchJsonContext.Default.ClientManifest);
+        string json = await CacheEverything.SmartGetString(version.Url);
+        ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 
         // Handle inheritsFrom (unlikely from a URL, but supported for completeness).
@@ -179,10 +186,32 @@ public class ClientManifest
         return res;
     }
 
+    public static async Task<ClientManifest> LoadFromUrlAsync(string url, bool useCacheAsMuchAsPossible = false)
+    {
+        string json = await CacheEverything.SmartGetString(url, useCacheAsMuchAsPossible);
+        ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
+        res.Original = json;
+
+        if (res.InheritsFrom != null)
+        {
+            Log.Print($"Manifest inherits from {res.InheritsFrom}, loading parent...");
+            var parentVersion = VersionManifest.GetVersionById(res.InheritsFrom);
+            var parent = await LoadFromVersionWithCacheAsync(parentVersion);
+            res.MergeWithParent(parent);
+        }
+
+        if (res.AssetIndex != null && res.AssetIndex.Index == null)
+        {
+            await res.AssetIndex.LoadIndexAsync();
+        }
+
+        return res;
+    }
+
     public static async Task<ClientManifest> LoadFromVersionWithCacheAsync(GameVersion version)
     {
         Log.Print($"Attempting to load client manifest for version {version.Id} from cache...");
-        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/");
+        string cachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/");
         if (File.Exists(cachePath + $"{version.Id}.json"))
         {
             try
@@ -226,7 +255,7 @@ public class ClientManifest
         if (Logging == null || Logging.Client == null) return null;
         // log xml files live in localappdata/.hyperlaunch/configs/logging/ID.json
         string arg = Logging.Client.Argument;
-        arg = arg.Replace("${path}", Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "configs/logging/", $"{Id}.json"));
+        arg = arg.Replace("${path}", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "configs/logging/", $"{Id}.json"));
         return arg;
     }
 
@@ -300,7 +329,7 @@ public class ClientManifest
     }
 
     //<summary>Resolves all launch arguments at once. Returns a list of strings which are arguments to the JVM.\nResolved args are unformatted and may contain placeholders which need to be replaced by the caller.</summary>
-    public List<string> ResolveLaunchCommand(GameAccount account, bool includeDefaultJvmArgs = false)
+    public List<string> ResolveLaunchCommand(GameAccount account, Instance instance, bool includeDefaultJvmArgs = false)
     {
         // first resolve JVM arguments with OS info since they may affect library selection
         OsInfo os = OsInfo.Detect();
@@ -322,12 +351,13 @@ public class ClientManifest
             .ToList();
         // then get the game arguments
         List<string> gameArgs = ResolveGameArguments(new FeatureSet{});
+        string basePath = instance.GetInstancePath();
         gameArgs = gameArgs.Select(arg => arg
             .Replace("${auth_player_name}", account.MinecraftUsername)
             .Replace("${version_name}", Id)
             .Replace("${auth_uuid}", account.MinecraftUUID)
             .Replace("${auth_access_token}", account.MinecraftAccessToken)
-            .Replace("${game_directory}", DownloadTask.BasePath)
+            .Replace("${game_directory}", basePath) // TODO: instancing goes here
             .Replace("${assets_root}", DownloadTask.BasePath + "assets/")
             .Replace("${assets_index_name}", AssetCollection)
             .Replace("${version_type}", Type)
@@ -346,7 +376,8 @@ public class ClientManifest
         gameArgs.Remove("${user_properties}");
         gameArgs.Remove("--userProperties");
 
-        if (includeDefaultJvmArgs)
+
+        if (Arguments is not null && Arguments.DefaultJvm is not null)
         {
             List<string> defaultJvmArgs = ResolveDefaultJvmArguments(os);
             jvmArgs = jvmArgs.Concat(defaultJvmArgs).ToList();
@@ -393,7 +424,7 @@ public class ClientManifest
                     matches = false;
                 if (rule.Os.Version != null && os.Version != null)
                 {
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(os.Version.ToString(), rule.Os.Version))
+                    if (!Regex.IsMatch(os.Version.ToString(), rule.Os.Version))
                         matches = false;
                 }
                 if (rule.Os.VersionRange != null && os.Version != null)

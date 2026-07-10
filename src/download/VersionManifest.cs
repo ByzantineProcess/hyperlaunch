@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch.Download;
 
@@ -19,38 +20,8 @@ public static class VersionManifest
 
     public static async Task LoadAsync()
     {
-        string cachePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.tag");
-        string cachedTag = null;
-        if (File.Exists(cachePath))
-        {
-            cachedTag = File.ReadAllText(cachePath);
-        }
-        HttpRequestMessage etaggedRequest = new HttpRequestMessage(HttpMethod.Get, "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
-        if (cachedTag != null)        
-        {
-            etaggedRequest.Headers.TryAddWithoutValidation("If-None-Match", cachedTag);
-        }
-        HttpResponseMessage response = await Http.Client.SendAsync(etaggedRequest);
-        if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
-        {
-            string cachedContent = await File.ReadAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.cache"));
-            _data = JsonSerializer.Deserialize(cachedContent, Hyperlaunch.HyperlaunchJsonContext.Default.VersionManifestData);
-            return;
-        }
-        else
-        {
-            response.EnsureSuccessStatusCode();
-            string content = await response.Content.ReadAsStringAsync();
-            _data = JsonSerializer.Deserialize(content, Hyperlaunch.HyperlaunchJsonContext.Default.VersionManifestData);
-            if (response.Headers.TryGetValues("ETag", out var etagValues)) // response.Headers.ETag is null for some stupid reason
-            {
-                string etag = string.Join("", etagValues);
-                Log.Print("Etag from server: " + etag);
-                await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.tag"), etag);
-            }
-            await File.WriteAllTextAsync(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifest.cache"), content);
-        }
-
+        _data = JsonSerializer.Deserialize(await CacheEverything.SmartGetString("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"), HyperlaunchJsonContext.Default.VersionManifestData);
+        return;
     }
 
     // function to get a GameVersion by its id (e.g. "1.20.1")

@@ -5,7 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hyperlaunch;
 using Hyperlaunch.Download;
+using Hyperlaunch.Instances;
+using Hyperlaunch.Instances.Loaders;
 using Hyperlaunch.Launch;
+using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch.Cli;
 
@@ -38,9 +41,22 @@ public static class Program
             case "versions":
                 await HandleListVersions();
                 break;
+            
+            case "launch-fabric":
+                await Init();
+                await VersionManifest.LoadAsync();
+                ClientManifest fabricManifest = await Fabric.GetClientManifestWithStableFabricAsync(args[1], true);
+                await HandleLaunch([], false, fabricManifest);
+                break;
+            
+            case "checky":
+                string path = CacheEverything.CalculateCachePath("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json", true);
+                await CacheEverything.SmartGet("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
+                Log.Print($"that cache path would look like {path}");
+                break;
 
             default:
-                Console.Error.WriteLine($"Unknown command: {args[0]}");
+                Log.PrintErr($"Unknown command: {args[0]}");
                 PrintUsage();
                 Environment.Exit(1);
                 break;
@@ -50,12 +66,13 @@ public static class Program
 
     static void PrintUsage()
     {
-        Console.WriteLine("hyperlaunch — fastest minecraft launcher around");
-        Console.WriteLine();
-        Console.WriteLine("Usage:");
-        Console.WriteLine("  hyperlaunch-cli login                  Log in with your Microsoft account");
-        Console.WriteLine("  hyperlaunch-cli launch [version]       Download & launch a version (default: latest release)");
-        Console.WriteLine("  hyperlaunch-cli versions               List available versions");
+        Log.Print("hyperlaunch — fastest minecraft launcher around");
+        Log.Print(" ");
+        Log.Print("Usage:");
+        Log.Print("  hyperlaunch-cli login                  Log in with your Microsoft account");
+        Log.Print("  hyperlaunch-cli launch [version]       Download & launch a version (default: latest release)");
+        Log.Print("  hyperlaunch-cli versions               List available versions");
+        Log.Print("  hyperlaunch-cli launch-fabric          Download & launch a Fabric modded version");
     }
 
     static async Task Init()
@@ -64,97 +81,48 @@ public static class Program
         string localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         System.IO.Directory.CreateDirectory(System.IO.Path.Combine(appData,  ".hyperlaunch/"));
         System.IO.Directory.CreateDirectory(System.IO.Path.Combine(localApp, ".hyperlaunch/"));
+        System.IO.Directory.CreateDirectory(System.IO.Path.Combine(localApp, ".hyperlaunch/", "instances/"));
 
         await Hyperlaunch.Settings.SettingsContainer.LoadAsync(
             System.IO.Path.Combine(appData, ".hyperlaunch/settings.json"));
-        await VersionManifest.LoadAsync();
     }
 
     static async Task HandleLogin()
     {
         string msToken = await MSAuth.Login();
         GameAccount account = await GameAccount.CreateAsync(msToken);
-        Console.WriteLine($"Logged in as {account.MinecraftUsername}");
+        Log.Print($"Logged in as {account.MinecraftUsername}");
     }
 
     static async Task HandleListVersions()
     {
         await Init();
-        Console.WriteLine($"Latest release:  {VersionManifest.Data.Latest.Release}");
-        Console.WriteLine($"Latest snapshot: {VersionManifest.Data.Latest.Snapshot}");
-        Console.WriteLine();
-        Console.WriteLine("Recent versions:");
+        Log.Print($"Latest release:  {VersionManifest.Data.Latest.Release}");
+        Log.Print($"Latest snapshot: {VersionManifest.Data.Latest.Snapshot}");
+        Log.Print(" ");
+        Log.Print("Recent versions:");
         int count = Math.Min(25, VersionManifest.Data.Versions.Count);
         for (int i = 0; i < count; i++)
         {
             var v = VersionManifest.Data.Versions[i];
-            Console.WriteLine($"  {v.Id,-20} [{v.Type}]");
+            Log.Print($"  {v.Id,-20} [{v.Type}]");
         }
     }
 
-    static async Task HandleLaunch(string[] args, bool forceModernJava)
+    static async Task HandleLaunch(string[] args, bool forceModernJava, ClientManifest? overrideClientManifest = null)
     {
+        Log.Print("starting launch");
         await Init();
+        Log.Print("here");
 
-        // Login
-        Console.WriteLine("Authenticating...");
-        string msToken = await MSAuth.Login();
-        GameAccount account = await GameAccount.CreateAsync(msToken);
-        Console.WriteLine($"Logged in as {account.MinecraftUsername}");
-
-        // Resolve version
-        string versionId;
-        if (args.Length >= 2)
+        if (overrideClientManifest is not null)
         {
-            versionId = args[1];
+            await LaunchMinecraft.AuthAndLaunch(overrideClientManifest, Instance.Default());
         }
         else
         {
-            versionId = VersionManifest.Data.Latest.Release;
-            Console.WriteLine($"No version specified, using latest release: {versionId}");
+            string versionId = args[1];
+            await LaunchMinecraft.AuthAndLaunch(versionId, Instance.Default());
         }
-
-        GameVersion version = VersionManifest.GetVersionById(versionId);
-
-        // Download
-        Console.WriteLine($"Loading client manifest for {versionId}...");
-        ClientManifest clientManifest = await ClientManifest.LoadFromVersionWithCacheAsync(version);
-        clientManifest.AssetIndex.Index.SaveInCorrectSpot();
-
-        List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
-        Console.WriteLine($"{downloadTasks.Count} files to download");
-
-        var progress = new Progress<long>(bytesRemaining =>
-        {
-            double mbRemaining = bytesRemaining / (1024.0 * 1024.0);
-            Console.Write($"\rDownload progress: {mbRemaining:F2} MB remaining   ");
-        });
-
-        await DownloadTask.ExecuteAllAsync(downloadTasks, maxConcurrentNetwork: 50, bytesRemainingProgress: progress);
-        Console.WriteLine("\rDownload complete.                                ");
-
-        // Extract natives
-        string nativesDir = System.IO.Path.Combine(DownloadTask.BasePath, "natives/", clientManifest.Id);
-        DownloadTask.ExtractNatives(clientManifest, nativesDir);
-
-        // Launch
-        int requiredJava = clientManifest.JavaVersion?.MajorVersion ?? 8;
-        if (forceModernJava)
-        {
-            requiredJava = Math.Max(requiredJava, 25);
-        }
-        Console.WriteLine($"Scanning for Java {requiredJava}+ installation...");
-        Jvm? jvm = Jvm.FindBestForVersion(requiredJava);
-        if (jvm == null)
-        {
-            Console.Error.WriteLine($"Error: could not find a Java {requiredJava} (or newer) installation.");
-            Console.Error.WriteLine("Please install the correct JDK and make sure it is on your PATH or");
-            Console.Error.WriteLine("installed in a standard location (e.g. C:\\Program Files\\Eclipse Adoptium).");
-            Environment.Exit(1);
-            return;
-        }
-        Console.WriteLine($"Using Java {jvm.Version} at: {jvm.ExecPath}");
-        Console.WriteLine("Launching Minecraft...");
-        LaunchMinecraft.Launch(jvm, account, clientManifest, includeDefaultJvmArgs: true);
     }
 }

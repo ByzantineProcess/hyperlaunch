@@ -5,7 +5,8 @@
     <RootNamespace>Hyperlaunch</RootNamespace>
     <AssemblyName>hyperlaunch-cli</AssemblyName>
     <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>partial</TrimMode>
+    <TrimMode>full</TrimMode>
+    <OptimizationPreference>Speed</OptimizationPreference>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <!-- <PublishAot>true</PublishAot> -->
     <!-- <PublishReadyToRun>false</PublishReadyToRun> -->
@@ -21,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.81.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.81.0" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.9" />
     
   </ItemGroup>
   <ItemGroup>

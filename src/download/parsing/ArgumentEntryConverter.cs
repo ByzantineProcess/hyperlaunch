@@ -14,7 +14,7 @@ public class ArgumentEntryConverter : JsonConverter<ArgumentEntry>
             return new ArgumentEntry { PlainValue = reader.GetString() };
         }
 
-        var conditional = JsonSerializer.Deserialize(ref reader, Hyperlaunch.HyperlaunchJsonContext.Default.ConditionalArgument);
+        var conditional = JsonSerializer.Deserialize(ref reader, HyperlaunchJsonContext.Default.ConditionalArgument);
         return new ArgumentEntry { Conditional = conditional };
     }
 
@@ -23,6 +23,6 @@ public class ArgumentEntryConverter : JsonConverter<ArgumentEntry>
         if (!value.IsConditional)
             writer.WriteStringValue(value.PlainValue);
         else
-            JsonSerializer.Serialize(writer, value.Conditional, Hyperlaunch.HyperlaunchJsonContext.Default.ConditionalArgument);
+            JsonSerializer.Serialize(writer, value.Conditional, HyperlaunchJsonContext.Default.ConditionalArgument);
     }
 }

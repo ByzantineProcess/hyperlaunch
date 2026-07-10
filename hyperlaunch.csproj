@@ -26,6 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="4.81.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.81.0" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.9" />
   </ItemGroup>
   <ItemGroup>
     <TrimmerRootAssembly Include="hyperlaunch" />

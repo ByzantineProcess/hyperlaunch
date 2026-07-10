@@ -2,12 +2,17 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 using Hyperlaunch.Download;
+using Hyperlaunch.Instances.Loaders;
 using Hyperlaunch.Settings;
+using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch;
 
-// all jsonable classes should go here
-// need this to keep AOT compiler happy
+// all json-ish classes should go here
+// need this to keep AOT compiler happy (?)
+
+// if you're back here again figuring out why some json class isn't working, look for {get; set;} thingies
+// if this helped, update the counter: 1
 
 [JsonSourceGenerationOptions(WriteIndented = false)]
 [JsonSerializable(typeof(SettingsClass))]
@@ -43,6 +48,10 @@ namespace Hyperlaunch;
 [JsonSerializable(typeof(XstsAuthProperties))]
 [JsonSerializable(typeof(MinecraftLoginRequest))]
 [JsonSerializable(typeof(VersionRange))]
+[JsonSerializable(typeof(FabricVersion))]
+[JsonSerializable(typeof(Intermediary))]
+[JsonSerializable(typeof(Loader))]
+[JsonSerializable(typeof(List<FabricVersion>))]
 public partial class HyperlaunchJsonContext : JsonSerializerContext
 {
 }

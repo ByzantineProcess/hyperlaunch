@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Hyperlaunch.Download;
+namespace Hyperlaunch.Utilities;
 
 public class VersionRange
 {

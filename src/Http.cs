@@ -18,8 +18,9 @@ public static class Http
     {
         var handler = new SocketsHttpHandler
         {
-            MaxConnectionsPerServer = 64,
+            MaxConnectionsPerServer = 8,
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AutomaticDecompression = DecompressionMethods.All,
             EnableMultipleHttp2Connections = true,
         };
 

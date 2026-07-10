@@ -60,15 +60,10 @@ public class Library
 
     public LibraryArtifact GetNativeArtifact(OsInfo os)
     {
-        Log.Print($"Attempting to get native artifact for library {Name} on OS {os.Name} {os.Arch}...");
         var key = GetNativeClassifierKey(os);
-        Log.Print($"Native classifier key for OS {os.Name} is {key}");
         if (key == null) return null;
         if (Downloads?.Classifiers == null) return null;
         Downloads.Classifiers.TryGetValue(key, out var artifact);
-        Log.Print(artifact != null
-            ? $"Found native artifact for library {Name} with classifier {key}: {artifact.Url}"
-            : $"No native artifact found for library {Name} with classifier {key}");
         return artifact;
     }
 

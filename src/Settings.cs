@@ -80,16 +80,16 @@ public class SettingsClass
             return new SettingsClass();
         }
         string settingsProfileSerialised = await File.ReadAllTextAsync(filepath);
-        return JsonSerializer.Deserialize(settingsProfileSerialised, Hyperlaunch.HyperlaunchJsonContext.Default.SettingsClass);
+        return JsonSerializer.Deserialize(settingsProfileSerialised, HyperlaunchJsonContext.Default.SettingsClass);
     }
     public async Task SaveToFile(string filepath)
     {
-        string settingsProfileSerialised = JsonSerializer.Serialize(this, Hyperlaunch.HyperlaunchJsonContext.Default.SettingsClass);
+        string settingsProfileSerialised = JsonSerializer.Serialize(this, HyperlaunchJsonContext.Default.SettingsClass);
         await File.WriteAllTextAsync(filepath, settingsProfileSerialised);
     }
     public string SaveToString()
     {
-        return JsonSerializer.Serialize(this, Hyperlaunch.HyperlaunchJsonContext.Default.SettingsClass);
+        return JsonSerializer.Serialize(this, HyperlaunchJsonContext.Default.SettingsClass);
     }
     public SettingsClass()
     {
@@ -106,6 +106,7 @@ public class SettingsClass
     public string AlternativeAppDataFolder = "";
     public bool ForgetTokensOnExit = false;
     public List<string> KnownJVMs = [];
+    public bool AggressiveDiskSpaceSaving = false;
 
 }
 
