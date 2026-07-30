@@ -58,7 +58,8 @@ public class Library
         return key.Replace("${arch}", os.IntArch);
     }
 
-    public LibraryArtifact GetNativeArtifact(OsInfo os)
+    #nullable enable
+    public LibraryArtifact? GetNativeArtifact(OsInfo os)
     {
         var key = GetNativeClassifierKey(os);
         if (key == null) return null;

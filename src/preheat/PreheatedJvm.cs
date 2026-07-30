@@ -15,7 +15,7 @@ public class PreheatedJvm
         baseJvm = jvm;
     }
 
-    public void preheat()
+    public void Preheat()
     {
         
     }

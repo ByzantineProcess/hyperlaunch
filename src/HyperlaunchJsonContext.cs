@@ -9,10 +9,8 @@ using Hyperlaunch.Utilities;
 namespace Hyperlaunch;
 
 // all json-ish classes should go here
-// need this to keep AOT compiler happy (?)
 
-// if you're back here again figuring out why some json class isn't working, look for {get; set;} thingies
-// if this helped, update the counter: 1
+// if you're back here again figuring out why some json class isn't working, look for an absence of {get; set;} thingies
 
 [JsonSourceGenerationOptions(WriteIndented = false)]
 [JsonSerializable(typeof(SettingsClass))]

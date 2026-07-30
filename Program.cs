@@ -1,12 +1,16 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Hyperlaunch;
 using Hyperlaunch.Download;
 using Hyperlaunch.Instances;
 using Hyperlaunch.Instances.Loaders;
+using Hyperlaunch.Instances.Mods.Modrinth;
 using Hyperlaunch.Launch;
 using Hyperlaunch.Utilities;
 
@@ -43,16 +47,40 @@ public static class Program
                 break;
             
             case "launch-fabric":
+                // Log.Print("waiting for enter");
+                // Console.ReadLine();
                 await Init();
                 await VersionManifest.LoadAsync();
                 ClientManifest fabricManifest = await Fabric.GetClientManifestWithStableFabricAsync(args[1], true);
                 await HandleLaunch([], false, fabricManifest);
                 break;
             
-            case "checky":
-                string path = CacheEverything.CalculateCachePath("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json", true);
-                await CacheEverything.SmartGet("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
-                Log.Print($"that cache path would look like {path}");
+            case "jarona":
+                // super silly bypassing
+                Log.Print($"performing sillyness with IP {Dns.GetHostAddresses("piston-meta.mojang.com")[0]}");
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, $"http://{Dns.GetHostAddresses("piston-meta.mojang.com")[0]}/mc/game/version_manifest_v2.json");
+                message.Headers.TryAddWithoutValidation("Host", "piston-meta.mojang.com");
+                HttpResponseMessage responseMessage = await Http.Client.SendAsync(message);
+                responseMessage.EnsureSuccessStatusCode();
+                Log.Print(await responseMessage.Content.ReadAsStringAsync());
+                break;
+            
+            case "sustingus":
+
+                FacetCollection searchQuery = 
+                    new Facet(FacetType.Versions, FacetOps.Is, "26.2")
+                    .Or(new Facet(FacetType.Categories, FacetOps.Is, "optimization"))
+                    .WrapAnd();
+
+                await ModrinthV2.Search(facets: searchQuery);
+
+                break;
+            
+            case "checky-forge":
+                await Init();
+                await VersionManifest.LoadAsync();
+                ClientManifest forgeManifest = await ClientManifest.LoadFromVersionWithCacheAsync(VersionManifest.GetVersionById("1.8.9:forge"));
+                await HandleLaunch([], false, forgeManifest);
                 break;
 
             default:
@@ -73,6 +101,7 @@ public static class Program
         Log.Print("  hyperlaunch-cli launch [version]       Download & launch a version (default: latest release)");
         Log.Print("  hyperlaunch-cli versions               List available versions");
         Log.Print("  hyperlaunch-cli launch-fabric          Download & launch a Fabric modded version");
+        Log.Print("  hyperlaunch-cli checky                 :3");
     }
 
     static async Task Init()
@@ -97,6 +126,7 @@ public static class Program
     static async Task HandleListVersions()
     {
         await Init();
+        await VersionManifest.LoadAsync();
         Log.Print($"Latest release:  {VersionManifest.Data.Latest.Release}");
         Log.Print($"Latest snapshot: {VersionManifest.Data.Latest.Snapshot}");
         Log.Print(" ");
@@ -104,7 +134,7 @@ public static class Program
         int count = Math.Min(25, VersionManifest.Data.Versions.Count);
         for (int i = 0; i < count; i++)
         {
-            var v = VersionManifest.Data.Versions[i];
+            GameVersion v = VersionManifest.Data.Versions[i];
             Log.Print($"  {v.Id,-20} [{v.Type}]");
         }
     }

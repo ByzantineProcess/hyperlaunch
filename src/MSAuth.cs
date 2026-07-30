@@ -10,7 +10,7 @@ namespace Hyperlaunch;
 public static class MSAuth
 {
     private static IPublicClientApplication app = PublicClientApplicationBuilder
-        .Create("25c2eb21-47d5-4262-84c5-a308c11ee76a")
+        .Create("25c2eb21-47d5-4262-84c5-a308c11ee76a") // please do not use in your own projects, getting your own is a lot easier than you think.
         .WithAuthority("https://login.microsoftonline.com/consumers")
         .WithRedirectUri("https://login.microsoftonline.com/common/oauth2/nativeclient")
         .Build();

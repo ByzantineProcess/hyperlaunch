@@ -20,7 +20,7 @@ public static class VersionManifest
 
     public static async Task LoadAsync()
     {
-        _data = JsonSerializer.Deserialize(await CacheEverything.SmartGetString("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"), HyperlaunchJsonContext.Default.VersionManifestData);
+        _data = JsonSerializer.Deserialize(await Cache.SmartGetString("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"), HyperlaunchJsonContext.Default.VersionManifestData);
         return;
     }
 

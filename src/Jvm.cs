@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Hyperlaunch;
 
 public class Jvm
 {
@@ -44,14 +45,14 @@ public class Jvm
     {
         try
         {
-            var psi = new ProcessStartInfo(execPath, "-version")
+            ProcessStartInfo psi = new ProcessStartInfo(execPath, "-version")
             {
                 RedirectStandardError  = true,  // java -version writes to stderr
                 RedirectStandardOutput = true,
                 UseShellExecute        = false,
                 CreateNoWindow         = true,
             };
-            using var proc = Process.Start(psi)!; // non-null: UseShellExecute=false always returns a Process
+            using Process proc = Process.Start(psi)!; // non-null: UseShellExecute=false always returns a Process
             // version info comes on stderr for all JVM implementations
             string output = proc.StandardError.ReadToEnd();
             await proc.WaitForExitAsync();
@@ -60,7 +61,7 @@ public class Jvm
             //   java version "1.8.0_401"   → major 8
             //   openjdk version "17.0.10"  → major 17
             //   openjdk version "21.0.2"   → major 21
-            var m = Regex.Match(output, @"""(?:1\.)?(\d+)");
+            Match m = Regex.Match(output, @"""(?:1\.)?(\d+)");
             if (m.Success && int.TryParse(m.Groups[1].Value, out int major))
                 return major;
         }
@@ -74,7 +75,7 @@ public class Jvm
     /// </summary>
     public static async Task<List<Jvm>> ScanForJvms()
     {
-        var candidates = new List<string>();
+        List<string> candidates = new List<string>();
 
         // ── 1. Whatever is on PATH ──────────────────────────────────────
         string pathExe = OperatingSystem.IsWindows() ? "javaw.exe" : "java";
@@ -89,7 +90,7 @@ public class Jvm
         }
 
         // ── 3. Common installation roots ────────────────────────────────
-        var roots = new List<string>();
+        List<string> roots = new List<string>();
         if (OperatingSystem.IsWindows())
         {
             foreach (string pf in new[]
@@ -140,8 +141,8 @@ public class Jvm
         }
 
         // Detect versions and deduplicate
-        var seen    = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var results = new List<Jvm>();
+        HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        List<Jvm> results = new List<Jvm>();
         foreach (string path in candidates)
         {
             if (!seen.Add(path)) continue;
@@ -149,6 +150,7 @@ public class Jvm
             if (v > 0) results.Add(new Jvm(path, v));
         }
 
+        Log.Print("finished jvmscan");
         return results.OrderByDescending(j => j.Version).ToList();
     }
 
@@ -160,7 +162,7 @@ public class Jvm
     /// </summary>
     public static async Task<Jvm?> FindBestForVersion(int requiredMajor)
     {
-        var all = await ScanForJvms();
+        List<Jvm> all = await ScanForJvms();
         return all
             .Where(j => j.Version >= requiredMajor)
             .OrderBy(j => j.Version)   // lowest satisfying version first

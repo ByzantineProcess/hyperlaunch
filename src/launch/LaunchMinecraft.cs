@@ -20,8 +20,13 @@ public class LaunchMinecraft
     {
         clientManifest.AssetIndex.Index.SaveInCorrectSpot();
 
-        List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
-        Console.WriteLine($"{downloadTasks.Count} files to download");
+        DownloadTask[] downloadTasks = DownloadTask.FromClientJson(clientManifest);
+        Console.WriteLine($"{downloadTasks.ToList().Count} files to download");
+
+        foreach (DownloadTask task in downloadTasks)
+        {
+            Log.Print(task.DestinationPath);
+        }
 
         var progress = new Progress<long>(bytesRemaining =>
         {
@@ -29,7 +34,7 @@ public class LaunchMinecraft
             Console.Write($"\rDownload progress: {mbRemaining:F2} MB remaining   ");
         });
 
-        await DownloadTask.ExecuteAllAsync(downloadTasks, maxConcurrentNetwork: 99, bytesRemainingProgress: progress);
+        await DownloadTask.ExecuteAllAsync(downloadTasks.ToList(), maxConcurrentNetwork: 16, bytesRemainingProgress: progress);
         Console.WriteLine("\rDownload complete.                                ");
 
         // Extract natives

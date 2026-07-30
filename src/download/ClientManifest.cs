@@ -58,7 +58,7 @@ public class ClientManifest
     public string MainClass { get; set; }
 
     [JsonPropertyName("minimumLauncherVersion")]
-    public int MinimumLauncherVersion { get; set; }
+    public double MinimumLauncherVersion { get; set; }
 
     [JsonPropertyName("releaseTime")]
     public string ReleaseTime { get; set; }
@@ -165,7 +165,7 @@ public class ClientManifest
 
     public static async Task<ClientManifest> LoadFromVersionAsync(GameVersion version)
     {
-        string json = await CacheEverything.SmartGetString(version.Url);
+        string json = await Cache.SmartGetString(version.Url);
         ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 
@@ -188,7 +188,7 @@ public class ClientManifest
 
     public static async Task<ClientManifest> LoadFromUrlAsync(string url, bool useCacheAsMuchAsPossible = false)
     {
-        string json = await CacheEverything.SmartGetString(url, useCacheAsMuchAsPossible);
+        string json = await Cache.SmartGetString(url, useCacheAsMuchAsPossible);
         ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 

@@ -11,7 +11,7 @@ public static class MinecraftServices
     // everything specific to one account is handled by GameAccount.cs
     public static async Task<string> ExchangeTokens(string msAccessToken)
     {
-        var xboxLiveRequestBody = new XboxLiveAuthRequest
+        XboxLiveAuthRequest xboxLiveRequestBody = new XboxLiveAuthRequest
         {
             Properties = new XboxLiveAuthProperties
             {

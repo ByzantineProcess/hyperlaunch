@@ -25,17 +25,17 @@ public class GameAccount
     public Cape[] Capes { get; init; }
     public static async Task<GameAccount> FetchProfileAsync(string mcAccessToken)
     {
-        var profileRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.minecraftservices.com/minecraft/profile");
+        HttpRequestMessage profileRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.minecraftservices.com/minecraft/profile");
         profileRequest.Headers.Add("Authorization", "Bearer " + mcAccessToken);
         
-        var profileResponse = await Http.Client.SendAsync(profileRequest);
+        HttpResponseMessage profileResponse = await Http.Client.SendAsync(profileRequest);
         profileResponse.EnsureSuccessStatusCode();
         return await profileResponse.Content.ReadFromJsonAsync(HyperlaunchJsonContext.Default.GameAccount);
     }
     public static async Task<GameAccount> CreateAsync(string msAccessToken)
     {
         string mcAccessToken = await MinecraftServices.ExchangeTokens(msAccessToken);
-        var profileData = await FetchProfileAsync(mcAccessToken);
+        GameAccount profileData = await FetchProfileAsync(mcAccessToken);
         Log.Print("Successfully fetched Minecraft profile data for " + profileData.MinecraftUsername);
         profileData.MinecraftAccessToken = mcAccessToken;
         return profileData;

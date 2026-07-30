@@ -17,6 +17,9 @@ bin/
 obj-cli/
 .vscode/settings.json
 
+perfview.exe
+*.etl
+
 # milcygtaniyjbfbd (man i love configuring your gitignore to actually not include your java build files by default)
 agent/.gradle
 agent/build/

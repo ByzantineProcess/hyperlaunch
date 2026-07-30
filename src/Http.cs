@@ -16,23 +16,23 @@ public static class Http
 
     private static HttpClient CreateClient()
     {
-        var handler = new SocketsHttpHandler
+        SocketsHttpHandler handler = new SocketsHttpHandler
         {
-            MaxConnectionsPerServer = 8,
+            MaxConnectionsPerServer = 6,
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
             AutomaticDecompression = DecompressionMethods.All,
             EnableMultipleHttp2Connections = true,
         };
 
-        var client = new HttpClient(handler)
+        HttpClient client = new HttpClient(handler)
         {
-            DefaultRequestVersion = HttpVersion.Version20,
-            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
+            DefaultRequestVersion = HttpVersion.Version11,
+            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher, // recommended (?)
             Timeout = TimeSpan.FromSeconds(60),
             DefaultRequestHeaders =
             {
                 { "Accept", "application/json" },
-                { "User-Agent", "Hyperlaunch/0.1 (https://github.com/byzantineprocess, discord: byzantineprocess)" }
+                { "User-Agent", "Hyperlaunch/0.1 (https://github.com/byzantineprocess)" }
             }
         };
 
@@ -41,13 +41,39 @@ public static class Http
 
     public static async Task<HttpResponseMessage> PostAsJsonAsync<T>(string url, T payload, JsonTypeInfo<T> jsonTypeInfo)
     {
-        var memoryStream = new MemoryStream();
+        MemoryStream memoryStream = new MemoryStream();
         JsonSerializer.Serialize(memoryStream, payload, jsonTypeInfo);
         memoryStream.Position = 0;
 
-        var content = new StreamContent(memoryStream);
+        StreamContent content = new StreamContent(memoryStream);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
         return await Client.PostAsync(url, content);
+    }
+}
+
+public enum HttpHint
+{
+    OneOne,
+    Two,
+    Three
+}
+public static class HttpHintApplier
+{
+    public static HttpRequestMessage Apply(HttpRequestMessage requestMessage, HttpHint httpHint)
+    {
+        switch (httpHint)
+        {
+            case HttpHint.OneOne:
+                requestMessage.Version = HttpVersion.Version11;
+                break;
+            case HttpHint.Two:
+                requestMessage.Version = HttpVersion.Version20;
+                break;
+            case HttpHint.Three:
+                requestMessage.Version = HttpVersion.Version30;
+                break;
+        }
+        return requestMessage;
     }
 }

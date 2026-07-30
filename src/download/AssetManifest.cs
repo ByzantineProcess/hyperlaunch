@@ -22,7 +22,7 @@ public class AssetManifest
     }
     public static async Task<AssetManifest> LoadFromUrlAndVerifyAsync(string url, string sha1, string id)
     {
-        string json = await CacheEverything.SmartGetString(url);
+        string json = await Cache.SmartGetString(url);
         if (!Sha1.Verify(json, sha1))
         {
             throw new System.Exception("Asset manifest failed integrity check.");

@@ -23,7 +23,7 @@ public static class Fabric
     {
         string url = $"{BASE_URL}loader/{gameVersion}/";
         Log.Print($"going to {url}...");
-        string res = await CacheEverything.SmartGetString(url);
+        string res = await Cache.SmartGetString(url);
         List<FabricVersion> versionList = JsonSerializer.Deserialize(res, HyperlaunchJsonContext.Default.ListFabricVersion);
         // fabric meta should 400 instead of returning 0 but this is probably best
         if (versionList.Count == 0)

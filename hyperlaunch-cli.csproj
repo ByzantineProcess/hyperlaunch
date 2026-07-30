@@ -8,9 +8,9 @@
     <TrimMode>full</TrimMode>
     <OptimizationPreference>Speed</OptimizationPreference>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
-    <!-- <PublishAot>true</PublishAot> -->
-    <!-- <PublishReadyToRun>false</PublishReadyToRun> -->
-    <!-- <SelfContained>false</SelfContained> -->
+    <PublishAot>true</PublishAot>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
   <ItemGroup>
     <!-- Exclude the Godot GUI entry point -->
