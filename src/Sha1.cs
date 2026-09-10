@@ -12,6 +12,13 @@ public static class Sha1
         SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(input), hashBytes);
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
+    public static string Compute(byte[] input)
+    {
+        Span<byte> hashBytes = stackalloc byte[20];
+        SHA1.HashData(input, hashBytes);
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
+
     public static bool Verify(string input, string expectedHash)
     {
         Span<byte> hashBytes = stackalloc byte[20];

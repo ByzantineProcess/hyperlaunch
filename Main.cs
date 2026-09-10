@@ -1,8 +1,12 @@
 using Godot;
 using Hyperlaunch.Download;
+using Hyperlaunch.Instances;
 using Hyperlaunch.Launch;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hyperlaunch.GodotGui;
 
@@ -11,13 +15,15 @@ public partial class Main : Control
     GameAccount account;
     public override async void _Ready()
     {
-        GD.Print("Main scene ready");
-        await Settings.SettingsContainer.LoadAsync(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData) + "/.hyperlaunch/settings.json");
-        GD.Print("Settings loaded");
-        GD.Print(Settings.SettingsContainer.Current.SaveToString());
-        // ensure both .hyperlaunch folders exist in both local and roaming
-        System.IO.Directory.CreateDirectory(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/"));
-        System.IO.Directory.CreateDirectory(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), ".hyperlaunch/"));
+        string appData  = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
+        string localApp = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+        Directory.CreateDirectory(Path.Combine(appData,  ".hyperlaunch/"));
+        Directory.CreateDirectory(Path.Combine(localApp, ".hyperlaunch/"));
+        Directory.CreateDirectory(Path.Combine(localApp, ".hyperlaunch/", "instances/"));
+
+        await Settings.SettingsContainer.LoadAsync(
+            Path.Combine(appData, ".hyperlaunch/settings.json")); 
+        
         await VersionManifest.LoadAsync();
         GetNode<RichTextLabel>("Latest").Text = "Latest Minecraft release: " + VersionManifest.Data.Latest.Release;
     }
@@ -30,24 +36,8 @@ public partial class Main : Control
     public async void _on_launch_button_pressed()
     {
         // attempt to launch the game (?)
-        Jvm jvm = new Jvm("javaw"); // this will need to be changed to the actual java path later
-        GameVersion latestVersion = VersionManifest.GetLatestRelease();
-        ClientManifest clientManifest = await ClientManifest.LoadFromVersionWithCacheAsync(latestVersion);
-        clientManifest.AssetIndex.Index.SaveInCorrectSpot();
-        List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
-
-        var progress = new Progress<long>(bytesRemaining =>
-        {
-            double mbRemaining = bytesRemaining / (1024.0 * 1024.0);
-            GD.Print($"Download progress: {mbRemaining:F2} MB remaining");
-        });
-
-        await DownloadTask.ExecuteAllAsync(downloadTasks, maxConcurrentNetwork: 20, bytesRemainingProgress: progress);
-
-        string nativesDir = System.IO.Path.Combine(DownloadTask.BasePath, "natives/", clientManifest.Id);
-        DownloadTask.ExtractNatives(clientManifest, nativesDir);
-
-        LaunchMinecraft.Launch(jvm, account, clientManifest);
+        // this button is bound to Launch Latest in the testgrounds.tscn
+        await LaunchMinecraft.AuthAndLaunch(VersionManifest.GetLatestRelease().Id, Instance.Default());
     }
 
     public async void _on_yolo_pressed()
@@ -55,21 +45,23 @@ public partial class Main : Control
         // get the Interactibles/LineEdit node
         LineEdit lineEdit = GetNode<LineEdit>("interactibles/LineEdit");
         string versionId = lineEdit.Text;
-        GameVersion version = VersionManifest.GetVersionById(versionId);
-        ClientManifest clientManifest = await ClientManifest.LoadFromVersionWithCacheAsync(version);
-        clientManifest.AssetIndex.Index.SaveInCorrectSpot();
-        List<DownloadTask> downloadTasks = DownloadTask.FromClientJson(clientManifest);
-        var progress = new Progress<long>(bytesRemaining =>
+
+        await HandleLaunch(versionId, false);
+    }
+
+    #nullable enable
+
+    static async Task HandleLaunch(string versionId, bool forceModernJava, ClientManifest? overrideClientManifest = null)
+    {
+        Log.Print("starting launch");
+
+        if (overrideClientManifest is not null)
         {
-            double mbRemaining = bytesRemaining / (1024.0 * 1024.0);
-            GD.Print($"Download progress: {mbRemaining:F2} MB remaining");
-        });
-        await DownloadTask.ExecuteAllAsync(downloadTasks, maxConcurrentNetwork: 50, bytesRemainingProgress: progress);
-
-        string nativesDir = System.IO.Path.Combine(DownloadTask.BasePath, "natives/", clientManifest.Id);
-        DownloadTask.ExtractNatives(clientManifest, nativesDir);
-
-        Jvm jvm = Jvm.FindBestForVersion(clientManifest.JavaVersion?.MajorVersion ?? 21) ?? new Jvm("javaw");
-        LaunchMinecraft.Launch(jvm, account, clientManifest);
+            await LaunchMinecraft.AuthAndLaunch(overrideClientManifest, Instance.Default());
+        }
+        else
+        {
+            await LaunchMinecraft.AuthAndLaunch(versionId, Instance.Default());
+        }
     }
 }

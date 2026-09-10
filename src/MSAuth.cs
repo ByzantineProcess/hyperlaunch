@@ -31,7 +31,7 @@ public static class MSAuth
         cacheHelper.RegisterCache(app.UserTokenCache);
 
         var accounts = await app.GetAccountsAsync();
-        AuthenticationResult result = null;
+        AuthenticationResult result;
         try
         {
             result = await app.AcquireTokenSilent(["XboxLive.signin"], accounts.FirstOrDefault()).ExecuteAsync();

@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Linq;
 using System.IO.Compression;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace Hyperlaunch.Utilities;
 
@@ -15,7 +16,7 @@ public static class Cache
     public static readonly string BaseCachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/cache/");
 
     #nullable enable
-    public static async Task<byte[]?> SmartGet(string url, bool isAlreadyVersioned = false, string? destination = null, string[]? paths = null, HttpHint httpHint = HttpHint.OneOne, SemaphoreSlim? semaphoreSlim = null)
+    public static async Task<byte[]?> SmartGet(string url, bool alwaysReadCached = false, string? destination = null, string[]? paths = null, HttpHint httpHint = HttpHint.OneOne, SemaphoreSlim? semaphoreSlim = null)
     {
         // this is the start of the Incredibly Complicated Cache System™
         // the name is wrong
@@ -42,7 +43,7 @@ public static class Cache
             // RULE 1: Global 1h cache since last modification time.
             DateTime lastChanged = File.GetLastWriteTime(filePath);
             DateTime currentTime = DateTime.Now;
-            if (lastChanged.AddHours(1) > currentTime || isAlreadyVersioned)
+            if (lastChanged.AddHours(1) > currentTime || alwaysReadCached)
             {
                 if (destination != null)
                 {
@@ -137,12 +138,14 @@ public static class Cache
         return Encoding.UTF8.GetString(await SmartGet(url, isAlreadyVersioned, httpHint: httpHint));
         #pragma warning restore CS8604
     }
-    public static string CalculateCachePath(string url, string[]? paths)
+
+    public static string CalculateCachePath(string url, string[]? paths = null, bool forceCreateDir = false)
     {
         Uri parsedUrl = new Uri(url);
         string domain = parsedUrl.DnsSafeHost;
         string ident = BitConverter.ToString(XxHash128.Hash(Encoding.UTF8.GetBytes(parsedUrl.PathAndQuery))).Replace("-", string.Empty).ToLower();
         string res =  Path.Combine(BaseCachePath, domain + "/", ident);
+        if (forceCreateDir) {Directory.CreateDirectory(Path.Combine(BaseCachePath, domain));}
         if (paths == null) return res;
         if (!paths.Contains(Path.GetDirectoryName(res)))
         {
@@ -171,9 +174,33 @@ public static class Cache
         }
     }
 
-    public static async Task WriteCompressedAsync(string filePath, byte[] bytes, int recursion = 0)
-    {
 
+    public static async Task WriteCompressedAsync(string filePath, Stream byteStream, int recursion = 0)
+    {
+        try
+        {
+            await using var fileStream = File.Create(filePath);
+            await using var brotliStream = new BrotliStream(fileStream, CompressionMode.Compress);
+            var memStream = byteStream;
+            await memStream.CopyToAsync(brotliStream);
+        }
+        catch (IOException)
+        {
+            if (recursion == 5)
+            {
+                // yeah it's not working. NOW you can error
+                throw;
+            }
+            // wait a second or two
+            await Task.Delay(150*(recursion+1));
+            #pragma warning disable CS8604 // if there is a filePath where we're writing to root atp you've got bigger issues
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)); // just in case
+            #pragma warning restore CS8604
+            await WriteCompressedAsync(filePath, byteStream, recursion + 1);
+        }
+    }
+        public static async Task WriteCompressedAsync(string filePath, byte[] bytes, int recursion = 0)
+    {
         try
         {
             await using var fileStream = File.Create(filePath);
@@ -197,6 +224,7 @@ public static class Cache
             await WriteCompressedAsync(filePath, bytes, recursion + 1);
         }
     }
+
 
     public static async Task<byte[]> ReadCompressedAsync(string filePath, int recursion = 0)
     {
@@ -226,7 +254,7 @@ public static class Cache
         }
     }
 
-    public static async Task CacheHttpResponseAsync(string filePath, HttpResponseMessage message, string? destination)
+    public static async Task CacheHttpResponseAsync(string filePath, HttpResponseMessage message, string? destination = null)
     {
         if (destination == null)
         {

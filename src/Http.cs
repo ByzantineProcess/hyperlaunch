@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
@@ -32,7 +31,7 @@ public static class Http
             DefaultRequestHeaders =
             {
                 { "Accept", "application/json" },
-                { "User-Agent", "Hyperlaunch/0.1 (https://github.com/byzantineprocess)" }
+                { "User-Agent", "Hyperlaunch/0.1 (made by https://github.com/byzantineprocess, discord: byzantineprocess)" }
             }
         };
 
@@ -52,7 +51,7 @@ public static class Http
     }
 }
 
-public enum HttpHint
+public enum HttpHint // this entire system should not save much time at all but what the hell
 {
     OneOne,
     Two,

@@ -3,6 +3,8 @@
 // then just gave up and told claude to do it
 // i have looked over it and it should all be fine
 
+// update: this has been significantly updated since first pass
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -131,9 +133,8 @@ public class ClientManifest
 
     // ── Loading ─────────────────────────────────────────────────────────
 
-    public static async Task<ClientManifest> LoadFromFileAsync(string path, bool modded = false, string baseVersion = "", string moddedId = "")
+    public static async Task<ClientManifest> Parse(string json, bool modded = false, string baseVersion = "", string moddedId = "")
     {
-        string json = await File.ReadAllTextAsync(path);
         ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
         res.Original = json;
 
@@ -163,53 +164,27 @@ public class ClientManifest
         return res;
     }
 
+    public static async Task<ClientManifest> LoadFromFileAsync(string path, bool modded = false, string baseVersion = "", string moddedId = "")
+    {
+        string json = await File.ReadAllTextAsync(path);
+        return await Parse(json, modded, baseVersion, moddedId);
+    }
+
     public static async Task<ClientManifest> LoadFromVersionAsync(GameVersion version)
     {
         string json = await Cache.SmartGetString(version.Url);
-        ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
-        res.Original = json;
-
-        // Handle inheritsFrom (unlikely from a URL, but supported for completeness).
-        if (res.InheritsFrom != null)
-        {
-            Log.Print($"Manifest inherits from {res.InheritsFrom}, loading parent...");
-            var parentVersion = VersionManifest.GetVersionById(res.InheritsFrom);
-            var parent = await LoadFromVersionWithCacheAsync(parentVersion);
-            res.MergeWithParent(parent);
-        }
-
-        if (res.AssetIndex != null && res.AssetIndex.Index == null)
-        {
-            await res.AssetIndex.LoadIndexAsync();
-        }
-
-        return res;
+        return await Parse(json);
     }
 
     public static async Task<ClientManifest> LoadFromUrlAsync(string url, bool useCacheAsMuchAsPossible = false)
     {
         string json = await Cache.SmartGetString(url, useCacheAsMuchAsPossible);
-        ClientManifest res = JsonSerializer.Deserialize(json, HyperlaunchJsonContext.Default.ClientManifest);
-        res.Original = json;
-
-        if (res.InheritsFrom != null)
-        {
-            Log.Print($"Manifest inherits from {res.InheritsFrom}, loading parent...");
-            var parentVersion = VersionManifest.GetVersionById(res.InheritsFrom);
-            var parent = await LoadFromVersionWithCacheAsync(parentVersion);
-            res.MergeWithParent(parent);
-        }
-
-        if (res.AssetIndex != null && res.AssetIndex.Index == null)
-        {
-            await res.AssetIndex.LoadIndexAsync();
-        }
-
-        return res;
+        return await Parse(json);
     }
 
     public static async Task<ClientManifest> LoadFromVersionWithCacheAsync(GameVersion version)
     {
+        // TODO: get via SmartGet instead of this system, implement proper system for user defined client manifests.
         Log.Print($"Attempting to load client manifest for version {version.Id} from cache...");
         string cachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ".hyperlaunch/", "manifests/");
         if (File.Exists(cachePath + $"{version.Id}.json"))
@@ -347,6 +322,7 @@ public class ClientManifest
             .Replace("${launcher_name}", "Hyperlaunch")
             .Replace("${launcher_version}", "0.1")
             .Replace("${natives_directory}", nativesDir)
+            .Replace("${library_directory}", DownloadTask.BaseLibraryPath)
             .Replace("${classpath}", classpath))
             .ToList();
         // then get the game arguments
@@ -364,6 +340,7 @@ public class ClientManifest
             .Replace("${launcher_name}", "Hyperlaunch")
             .Replace("${launcher_version}", "0.1")
             .Replace("${natives_directory}", nativesDir)
+            .Replace("${library_directory}", DownloadTask.BaseLibraryPath)
             .Replace("${user_type}", "msa"))
             .ToList();
         // truthfully i have no idea what an xuid is

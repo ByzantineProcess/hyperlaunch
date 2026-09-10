@@ -1,13 +1,11 @@
-
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace Hyperlaunch.Instances.Mods.Modrinth;
 
+// i made this entire facet system because the modrinth docs were wrong
+// end my suffering
 public class Facet
 {
     FacetType facetType;

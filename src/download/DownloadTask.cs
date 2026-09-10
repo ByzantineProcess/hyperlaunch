@@ -84,6 +84,10 @@ public class DownloadTask
                     tasks.Add(new DownloadTask(nativeArtifact.Url, destinationPath, nativeArtifact.Sha1, nativeArtifact.Size));
                     Log.Print($"Added download task for native artifact of library {library.Name} at URL {nativeArtifact.Url}");
                 }
+                else
+                {
+                    Log.Print($"[natives] rejected downloading natives for {destinationPath} due to it existing already");
+                }
             }
 
             // Download main artifact
@@ -181,15 +185,18 @@ public class DownloadTask
     {
         OsInfo os = OsInfo.Detect();
         Directory.CreateDirectory(nativesDir);
-        string[] paths = Directory.GetFiles(nativesDir);
+        string[] paths = ScanPaths(nativesDir);
 
         foreach (Library library in clientManifest.ResolveLibraries(os))
         {
             LibraryArtifact nativeArtifact = library.GetNativeArtifact(os);
             if (nativeArtifact == null) continue;
 
-            string jarPath = Path.Combine(BaseLibraryPath, nativeArtifact.Path.Replace('/', Path.DirectorySeparatorChar));
-            if (!Cache.FileExists(jarPath, paths)) continue;
+            string jarPath = Path.GetFullPath(Path.Combine(BaseLibraryPath, nativeArtifact.Path));
+            if (!Cache.FileExists(jarPath, paths))
+            {
+                continue;
+            }
 
             using ZipArchive archive = ZipFile.OpenRead(jarPath);
             foreach (ZipArchiveEntry entry in archive.Entries)
@@ -219,8 +226,10 @@ public class DownloadTask
                     var destPath = Path.Combine(nativesDir, entry.Name);
                     if (Cache.FileExists(destPath, paths) && !forceExtract)
                     {
+                        Log.Print("[natives] ignored due to path already existing");
                         continue;
                     }
+                    Log.Print("[natives] not ignored!!");
                     entry.ExtractToFile(destPath, overwrite: true);
                 }
             }
@@ -232,9 +241,12 @@ public class DownloadTask
         Directory.CreateDirectory(BaseAssetPath);
         Directory.CreateDirectory(BaseLibraryPath);
         Directory.CreateDirectory(BaseVersionPath);
+        Directory.CreateDirectory(BaseConfigPath);
     }
 
-    public static string[] ScanPaths()
+    #nullable enable
+
+    public static string[] ScanPaths(string? extraDir = null)
     {
         EnumerationOptions enumOptions = new EnumerationOptions();
         enumOptions.RecurseSubdirectories = true;
@@ -244,12 +256,16 @@ public class DownloadTask
         string[] versionDirFiles = Directory.GetFiles(BaseVersionPath, "*", enumOptions);
         string[] configDirFiles = Directory.GetFiles(BaseConfigPath, "*", enumOptions);
         string[] allDirs = Directory.GetDirectories(BasePath, "*", enumOptions);
+        string[] extraFiles = [];
+        if (extraDir != null)
+        {
+            extraFiles = Directory.GetDirectories(extraDir, "*", enumOptions);
+        }
         // normalise EVERYTHING
-        string[] res = [..cacheDirFiles, ..assetDirFiles, ..libDirFiles, ..versionDirFiles, ..configDirFiles, ..allDirs];
+        string[] res = [..cacheDirFiles, ..assetDirFiles, ..libDirFiles, ..versionDirFiles, ..configDirFiles, ..extraFiles, ..allDirs];
         res = res.Select(x => Path.GetFullPath(x)).ToArray();
         return res;
     }
-
     public static async Task ExecuteAllAsync(List<DownloadTask> tasks, int maxConcurrentNetwork = 10, IProgress<long> bytesRemainingProgress = null)
     {
         EnsureAllDirectoriesExist();

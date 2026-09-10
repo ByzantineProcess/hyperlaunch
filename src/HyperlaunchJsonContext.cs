@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 using Hyperlaunch.Download;
 using Hyperlaunch.Instances.Loaders;
+using Hyperlaunch.Instances.Mods.Modrinth;
 using Hyperlaunch.Settings;
 using Hyperlaunch.Utilities;
 
@@ -50,6 +51,11 @@ namespace Hyperlaunch;
 [JsonSerializable(typeof(Intermediary))]
 [JsonSerializable(typeof(Loader))]
 [JsonSerializable(typeof(List<FabricVersion>))]
+[JsonSerializable(typeof(Project))]
+[JsonSerializable(typeof(Image))]
+[JsonSerializable(typeof(Licence))]
+[JsonSerializable(typeof(DonationPlatform))]
+[JsonSerializable(typeof(SearchResponse))]
 public partial class HyperlaunchJsonContext : JsonSerializerContext
 {
 }
