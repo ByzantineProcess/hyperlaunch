@@ -11,6 +11,7 @@ using Hyperlaunch.Instances.Loaders;
 using Hyperlaunch.Instances.Mods.Modrinth;
 using Hyperlaunch.Launch;
 using Hyperlaunch.Utilities;
+using Microsoft.Identity.Client;
 
 namespace Hyperlaunch.Cli;
 
@@ -57,6 +58,66 @@ public static class Program
                 await HandleGenCmd(args);
                 break;
             
+            case "instance":
+                await Init();
+                await VersionManifest.LoadAsync();
+                if (args.Length == 1) { Log.Print("instance command requires further arguments"); break; }
+                switch (args[1].ToLowerInvariant())
+                {
+                    case "create":
+                        if (args.Length == 5)
+                        {
+                            Instance instanceCreate = new Instance(args[2], (ClientType)StringEnum.Match(args[3], typeof(ClientType))!, args[4], false);
+                            instanceCreate.Save();
+                            Log.Print("New instance made:");
+                            Log.Print(PrettyToString.Generic(instanceCreate));
+                        }
+                        break;
+                    
+                    case "launch":
+                        await HandleLaunch(Instance.Load(args[2]));
+                        break;
+                    
+                    case "add":
+                        Instance instanceAdd = Instance.Load(args[2]);
+                        FilterCollection filters = 
+                            new Filter(FilterType.Versions, FilterOps.Is, instanceAdd.MainVersion)
+                            .And(new Filter(FilterType.Categories, FilterOps.Is, StringEnum.Retrieve(instanceAdd.ClientType)));
+                        SearchResponse searchResponse = await ModrinthV3.Search(args[3], filters, limit: 5);
+
+                        Log.Print("Search results:");
+                        int count = 0;
+                        foreach (string name in searchResponse.Hits.Select(hit => hit.Name))
+                        {
+                            count++;
+                            Log.Print($" {count}) {name}");
+                        }
+                        Console.Write("Selection: ");
+                        string? selString = Console.ReadLine();
+                        int sel = Convert.ToInt32(selString);
+
+                        Directory.CreateDirectory(Path.Combine(instanceAdd.GetInstancePath(), "mods/"));
+
+                        await ModrinthV3.DownloadMod(instanceAdd, searchResponse.Hits[sel-1].Id);
+
+                        Log.Print($"Successfully downloaded {searchResponse.Hits[sel-1].Name} to the instance {instanceAdd.Name}");
+
+                        break;
+
+                    case "help" or "?":
+                        Log.Print("Instance commands:");
+                        Log.Print("instance create {name} {loader} {version}");
+                        Log.Print("instance launch {name}");
+                        Log.Print("instance add {name} {search query}");
+                        break;
+
+                    default:
+                        Log.Print("Unknown instance command.");
+                        break;
+                }
+
+                break;
+            
             case "jarona":
                 // super silly bypassing
                 Log.Print($"performing sillyness with IP {Dns.GetHostAddresses("piston-meta.mojang.com")[0]}");
@@ -68,6 +129,7 @@ public static class Program
                 break;
             
             case "sustingus":
+                await VersionManifest.LoadAsync();
 
                 FilterCollection searchQuery = 
                     new Filter(FilterType.Versions, FilterOps.Is, "26.1")
@@ -83,7 +145,10 @@ public static class Program
 
                 SearchResponse response = await ModrinthV3.Search("", finalSearch, SearchIndex.Relevance, 0, 1);
                 FullProject? project = await ModrinthV3.GetProjectAsync(response.Hits[0].Id);
-                Log.Print(PrettyToString.Generic(project));
+                if (project == null) { break; }
+
+                await ModrinthV3.ResolveInstanceAndProjectToFile(Instance.DefaultFabric(), response.Hits[0].Id);
+
                 break;
             
             case "checky-neoforge":
@@ -162,6 +227,37 @@ public static class Program
             GameVersion v = VersionManifest.Data.Versions[i];
             Log.Print($"  {v.Id,-20} [{v.Type}]");
         }
+    }
+
+    static async Task HandleLaunch(Instance instance)
+    {
+        switch (instance.ClientType)
+        {
+            case ClientType.Vanilla:
+                await LaunchMinecraft.AuthAndLaunch(instance.MainVersion, instance);
+                break;
+            
+            case ClientType.Fabric:
+                await LaunchMinecraft.AuthAndLaunch(await Fabric.GetClientManifestWithStableFabricAsync(instance.MainVersion, true), instance);
+                break;
+            
+            case ClientType.NeoForge:
+                if (!instance.MainVersion.StartsWith("26")) { Log.Print("Obfuscated NeoForge is not ready yet."); }
+                string neoForgeVersion = await NeoForge.GetLatestNeoForgeVersionAsync(instance.MainVersion);
+                Log.Print($"latest neoforge is {neoForgeVersion}");
+                ClientManifest newManifest = await NeoForge.GetClientManifestAsync(neoForgeVersion);
+                await LaunchMinecraft.DownloadEverything(newManifest);
+                await NeoForge.InstallLoader(newManifest, neoForgeVersion);
+                await LaunchMinecraft.AuthAndLaunch(newManifest, instance);
+
+                break;
+            
+            default:
+                Log.Print("Other loaders are in progress.");
+                break;
+
+        }
+        
     }
 
     static async Task HandleLaunch(string[] args, bool forceModernJava, ClientManifest? overrideClientManifest = null)

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 using Hyperlaunch.Download;
+using Hyperlaunch.Instances;
 using Hyperlaunch.Instances.Loaders;
 using Hyperlaunch.Instances.Mods.Modrinth;
 using Hyperlaunch.Settings;
@@ -61,6 +62,11 @@ namespace Hyperlaunch;
 [JsonSerializable(typeof(FullProjectBase))]
 [JsonSerializable(typeof(V2Project))]
 [JsonSerializable(typeof(FullProject))]
+[JsonSerializable(typeof(ModrinthVersion))]
+[JsonSerializable(typeof(VersionFile))]
+[JsonSerializable(typeof(VersionFileHashes))]
+[JsonSerializable(typeof(List<ModrinthVersion>))]
+[JsonSerializable(typeof(Instance))]
 public partial class HyperlaunchJsonContext : JsonSerializerContext
 {
 }

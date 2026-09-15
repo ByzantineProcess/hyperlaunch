@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Hyperlaunch.Download;
+using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch.Instances.Mods.Modrinth;
 
@@ -58,7 +62,54 @@ public static class ModrinthV3
         return project;
     }
 
+    public static async Task<ModrinthVersion?> GetVersionAsync(string versionId)
+    {
+        HttpResponseMessage res = await Http.Client.GetAsync($"{BaseModrinthV3Url}version/{versionId}");
+        res.EnsureSuccessStatusCode();
+        ModrinthVersion? version = await res.Content.ReadFromJsonAsync(HyperlaunchJsonContext.Default.ModrinthVersion);
+        return version;
+    }
 
+    public static async Task<ModrinthVersion> ResolveInstanceAndProjectToVersion(Instance instance, string projectId)
+    {
+        Dictionary<string, string> urlParams = new Dictionary<string, string>
+        {
+            { "loaders", $"[\"{StringEnum.Retrieve(instance.ClientType)}\"]" },
+            { "loader_fields", $"{{\"game_versions\":[\"{instance.MainVersion}\"]}}" },
+            { "featured", "false" },
+            { "include_changelog", "false" }
+        };
+        string serialisedParams = await new FormUrlEncodedContent(urlParams).ReadAsStringAsync();
+
+        Log.Print($"requesting a {BaseModrinthV3Url}project/{projectId}/version?{serialisedParams}");
+        HttpResponseMessage res = await Http.Client.GetAsync($"{BaseModrinthV3Url}project/{projectId}/version?{serialisedParams}");
+        res.EnsureSuccessStatusCode();
+        List<ModrinthVersion>? versions = await res.Content.ReadFromJsonAsync(HyperlaunchJsonContext.Default.ListModrinthVersion);
+        if (versions == null) { throw new Exception("screaming and crying rn"); }
+
+        return versions[0];
+    }
+
+    public static async Task<VersionFile> ResolveInstanceAndProjectToFile(Instance instance, string projectId)
+    {
+        return (await ResolveInstanceAndProjectToVersion(instance, projectId)).VersionFiles[0];
+    }
+
+    public static async Task DownloadMod(Instance instance, string projectId, bool andDependenciesToo = true, string[]? paths = null)
+    {
+        if (paths == null) { paths = DownloadTask.ScanPaths(); }
+        ModrinthVersion version = await ResolveInstanceAndProjectToVersion(instance, projectId);
+        List<Dependency> requiredDeps = version.Dependencies.Where(dependency => dependency.DependencyType == "required").ToList();
+        if (requiredDeps.Count > 0)
+        {
+            foreach (Dependency dependency in requiredDeps)
+            {
+                await DownloadMod(instance, dependency.ProjectId, paths: paths);
+            }
+        }
+        VersionFile file = version.VersionFiles[0];
+        await Cache.SmartGet(file.Url, true, Path.Combine(instance.GetInstancePath(), "mods/", file.Filename), paths);
+    }
 }
 
 public enum SearchIndex

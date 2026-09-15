@@ -33,7 +33,7 @@ public static class PrettyToString
         return oType.IsGenericType && (oType.GetGenericTypeDefinition() == typeof(List<>));
     }
 
-    public static string FromList<T>(List<T> any)
+    public static string FromList<T>(List<T> any, int? max = null)
     {
         string res = $"List [ \n";
         int count = 0;
@@ -41,6 +41,7 @@ public static class PrettyToString
         {
             res += $"  {count} = {generic}\n";
             count++;
+            if (max != null) { if (count > max ) { break; } }
         }
         res += "]\n";
         return res;

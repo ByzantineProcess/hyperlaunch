@@ -320,7 +320,7 @@ public class ClientManifest
         // libraries should already be resolved by the time we call this
         // but we can still get a classpath
         // Use the jar key if set (e.g. Forge reuses the vanilla jar)
-        string jarVersion = JarVersion ?? Id;
+        string jarVersion = JarVersion ?? BaseVersion ?? Id;
         string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}/{jarVersion}.jar");
         // make a directory for dumped native libs to go in
         string nativesDir = Path.Combine(DownloadTask.BasePath, "natives/", Id);

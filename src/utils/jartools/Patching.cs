@@ -136,7 +136,7 @@ public static class Patching
 
                 case OpType.MODIFY:
                     // oh hell naw
-                    Log.Print($"doing MODIFY call on {path}");
+                    // Log.Print($"doing MODIFY call on {path}");
                     byte[] fileBytes = new byte[clientJar.GetEntry(path).Length];
                     Stream fs = clientJar.GetEntry(path).Open();
                     fs.ReadExactly(fileBytes);

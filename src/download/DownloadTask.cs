@@ -282,7 +282,7 @@ public class DownloadTask
         res = res.Select(x => Path.GetFullPath(x)).ToArray();
         return res;
     }
-    public static async Task ExecuteAllAsync(List<DownloadTask> tasks, int maxConcurrentNetwork = 10, IProgress<long> bytesRemainingProgress = null)
+    public static async Task ExecuteAllAsync(List<DownloadTask> tasks, int maxConcurrentNetwork = 10, IProgress<long>? bytesRemainingProgress = null)
     {
         EnsureAllDirectoriesExist();
         string[] paths = ScanPaths();
@@ -304,7 +304,7 @@ public class DownloadTask
             bytesRemainingProgress?.Report(totalBytesRemaining);
         }
 
-        async Task RunTaskAsync(DownloadTask task, SemaphoreSlim limiter, string[] paths)
+        async Task RunTaskAsync(DownloadTask task, SemaphoreSlim? limiter, string[] paths)
         {
             var downloaded = await task.ExecuteAsync(paths, limiter);
             if (bytesRemainingProgress == null)

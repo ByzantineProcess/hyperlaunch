@@ -7,13 +7,13 @@ namespace Hyperlaunch.Preheat;
 // What if we could load /coa JVM with the classpath, and stop it before the Main minecraft class?
 public class PreheatedJvm
 {
-    Jvm baseJvm;
-    Process jvmProcess;
-    ProcessStartInfo jvmStartInfo;
-    public PreheatedJvm(Jvm jvm)
-    {
-        baseJvm = jvm;
-    }
+    // Jvm baseJvm;
+    // Process jvmProcess;
+    // ProcessStartInfo jvmStartInfo;
+    // public PreheatedJvm(Jvm jvm)
+    // {
+    //     // baseJvm = jvm;
+    // }
 
     public void Preheat()
     {

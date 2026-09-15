@@ -9,7 +9,7 @@ public static class ModrinthV2
 {
     #nullable enable
 
-    const string BaseModrinthV2Url = "https://api.modrinth.com/v2/";
+    public const string BaseModrinthV2Url = "https://api.modrinth.com/v2/";
     
     public static async Task Search(string? query = null, FacetCollection? facets = null, SearchIndex? index = null,
                                     int? offset = null, int? limit = null)
@@ -25,7 +25,7 @@ public static class ModrinthV2
         }
         if (index != null)
         {
-            urlParams.Add("index", Utilities.StringEnum.Retrieve(index));
+            urlParams.Add("index", Utilities.StringEnum.Retrieve(index)!);
         }
         if (offset != null)
         {
