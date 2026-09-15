@@ -110,11 +110,11 @@ public class LaunchMinecraft
         // resolve launch command from client manifest
         List<string> launchCommand = clientManifest.ResolveLaunchCommand(account, instance, includeDefaultJvmArgs);
         // if on windows, normalise all / to \ in arguments
-        if (OsInfo.Detect().Name == "windows")
-        {
-            launchCommand = launchCommand.Select(arg => 
-                arg.Replace("/", "\\").Replace("\\\\", "\\")).ToList();
-        }
+        // if (OsInfo.Detect().Name == "windows")
+        // {
+        //     launchCommand = launchCommand.Select(arg => 
+        //         arg.Replace("/", "\\").Replace("\\\\", "\\")).ToList();
+        // }
         Log.Print("Resolved launch command");
         System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
         startInfo.FileName = jvm.ExecPath;
@@ -124,7 +124,7 @@ public class LaunchMinecraft
             startInfo.ArgumentList.Add(arg);
         }
 
-        Log.Print(PrettyToString.List(launchCommand));
+        Log.Print(PrettyToString.FromList(launchCommand));
 
         startInfo.UseShellExecute = false;
         startInfo.WorkingDirectory = instance.GetInstancePath();

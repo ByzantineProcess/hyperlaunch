@@ -72,7 +72,34 @@ public class DownloadTask
         }
 
         var os = OsInfo.Detect();
-        foreach (var library in clientManifest.ResolveLibraries(os))
+        tasks.AddRange(FromLibraries(clientManifest.ResolveLibraries(os)));
+
+        var jarVersion = clientManifest.JarVersion ?? clientManifest.Id;
+        if (clientManifest.IsModded)
+        {
+            jarVersion = clientManifest.BaseVersion;
+        }
+        var mainJar = clientManifest.Downloads.Client;
+        var mainJarPath = Path.GetFullPath($"{BaseVersionPath}/{jarVersion}.jar");
+        if (!paths.Contains(mainJarPath))
+        {
+            tasks.Add(new DownloadTask(mainJar.Url, mainJarPath, mainJar.Sha1, mainJar.Size));
+        }
+
+        DownloadTask[] tasksArray = tasks.ToArray();
+        Random.Shared.Shuffle(tasksArray); // better chance of maxing out the bandwidth at any given point
+
+        return tasksArray;
+    }
+
+    public static List<DownloadTask> FromLibraries(List<Library> libraries)
+    {
+        return FromLibraries(libraries, ScanPaths(), OsInfo.Detect());
+    }
+    public static List<DownloadTask> FromLibraries(List<Library> libraries, string[] paths, OsInfo os)
+    {
+        List<DownloadTask> tasks = new List<DownloadTask>();
+        foreach (var library in libraries)
         {
             // Download native classifier artifact for current platform
             var nativeArtifact = library.GetNativeArtifact(os);
@@ -113,20 +140,9 @@ public class DownloadTask
                 }
             }
         }
-
-        var jarVersion = clientManifest.JarVersion ?? clientManifest.Id;
-        var mainJar = clientManifest.Downloads.Client;
-        var mainJarPath = Path.GetFullPath($"{BaseVersionPath}/{jarVersion}.jar");
-        if (!paths.Contains(mainJarPath))
-        {
-            tasks.Add(new DownloadTask(mainJar.Url, mainJarPath, mainJar.Sha1, mainJar.Size));
-        }
-
-        DownloadTask[] tasksArray = tasks.ToArray();
-        Random.Shared.Shuffle(tasksArray); // better chance of maxing out the bandwidth at any given point
-
-        return tasksArray;
+        return tasks;
     }
+
     public async Task<long> ExecuteAsync(string[] paths, SemaphoreSlim networkLimiter = null)
     {
         byte[] data;

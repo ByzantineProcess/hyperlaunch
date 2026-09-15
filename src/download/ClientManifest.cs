@@ -85,6 +85,10 @@ public class ClientManifest
     public bool IsModded { get; set; } = false;
     public string BaseVersion { get; set; } = "";
 
+    #nullable enable
+    public ClientManifest? Parent { get; set; }
+    #nullable disable
+
     // ── Inheritance ──────────────────────────────────────────────────────
 
     /// <summary>Merges this (child/modded) manifest onto a parent manifest, inheriting any fields that are null in the child.</summary>
@@ -129,6 +133,10 @@ public class ClientManifest
         // Inherit numeric fields only when the child left them at default.
         if (ComplianceLevel == 0) ComplianceLevel = parent.ComplianceLevel;
         if (MinimumLauncherVersion == 0) MinimumLauncherVersion = parent.MinimumLauncherVersion;
+
+        BaseVersion = parent.Id;
+        Parent = parent;
+        IsModded = true;
     }
 
     // ── Loading ─────────────────────────────────────────────────────────

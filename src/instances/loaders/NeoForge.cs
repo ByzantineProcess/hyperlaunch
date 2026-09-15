@@ -1,14 +1,17 @@
 
 
 // recommended way to get forge-like version data is just by extracting it??? 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Hyperlaunch.Download;
 using Hyperlaunch.Utilities;
+using Hyperlaunch.Utilities.JarTools;
 
 namespace Hyperlaunch.Instances.Loaders;
 
@@ -80,7 +83,20 @@ public static class NeoForge
             "data/client.lzma",
             false
         );
+        byte[] iProfileBytes = await ZipCache.ReadFileFromZipUrl(
+            $"{BASE_URL}releases/net/neoforged/neoforge/{neoforgeVersion}/neoforge-{neoforgeVersion}-installer.jar",
+            "install_profile.json",
+            true
+        );
+        NeoForgeInstallProfile profile = JsonSerializer.Deserialize(Encoding.UTF8.GetString(iProfileBytes), HyperlaunchJsonContext.Default.NeoForgeInstallProfile) ?? throw new Exception("bad");
+        if (Encoding.UTF8.GetString(iProfileBytes).Contains("MOJMAP"))
+        {
+            throw new NotImplementedException("Obfuscated (Neo)Forge support is not finished.");
+        }
 
-        Gdiff.PatchJarWithNeoForgeBundle("", clientBytes, manifest.BaseVersion, neoFormVersion);
+        Patching.PatchJarWithNeoForgeBundle($"{DownloadTask.BaseVersionPath}/{manifest.BaseVersion}.jar", clientBytes, neoforgeVersion);
+
+
+        await DownloadTask.ExecuteAllAsync(DownloadTask.FromLibraries(profile.Libraries));
     }
 }

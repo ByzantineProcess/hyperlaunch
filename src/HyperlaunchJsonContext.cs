@@ -51,11 +51,16 @@ namespace Hyperlaunch;
 [JsonSerializable(typeof(Intermediary))]
 [JsonSerializable(typeof(Loader))]
 [JsonSerializable(typeof(List<FabricVersion>))]
-[JsonSerializable(typeof(Project))]
+[JsonSerializable(typeof(MiniProject))]
 [JsonSerializable(typeof(Image))]
 [JsonSerializable(typeof(Licence))]
 [JsonSerializable(typeof(DonationPlatform))]
 [JsonSerializable(typeof(SearchResponse))]
+[JsonSerializable(typeof(NeoForgeInstallProfile))]
+[JsonSerializable(typeof(Dependency))]
+[JsonSerializable(typeof(FullProjectBase))]
+[JsonSerializable(typeof(V2Project))]
+[JsonSerializable(typeof(FullProject))]
 public partial class HyperlaunchJsonContext : JsonSerializerContext
 {
 }

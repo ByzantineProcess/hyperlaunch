@@ -10,6 +10,6 @@
     <!-- This is here for native AOT -->
     <!-- Note: This sucks -->
     <!-- TODO: remove this stupid thing and add json source generation instead -->
-    <type fullname="Hyperlaunch.*" preserve="all" />
+    <!-- <type fullname="Hyperlaunch.*" preserve="all" /> -->
     <!-- <type fullname="System.Collections.Generic.List`1[[Hyperlaunch.*]]" preserve="all" /> -->
 </linker>

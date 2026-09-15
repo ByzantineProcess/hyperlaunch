@@ -4,7 +4,7 @@ using Hyperlaunch.Utilities;
 
 namespace Hyperlaunch.Instances.Mods.Modrinth;
 
-public class Project
+public class MiniProject
 {
     [JsonPropertyName("project_id")]
     public required string Id { get; set; }
@@ -24,7 +24,7 @@ public class Project
     [JsonPropertyName("name")]
     public required string Name { get; set; }
 
-    [JsonPropertyName("sumary")]
+    [JsonPropertyName("summary")]
     public required string Summary { get; set; }
 
     [JsonPropertyName("project_types")]
@@ -48,32 +48,29 @@ public class Project
     [JsonPropertyName("loaders")]
     public required List<string> Loaders { get; set; }
 
-    [JsonPropertyName("versions")]
-    public required List<string> Versions { get; set; }
+    [JsonPropertyName("version_id")]
+    public required string RecommendedVersionId { get; set; }
 
     [JsonPropertyName("license")]
     public required string Licence { get; set; }
 
-    [JsonPropertyName("published")]
-    public required string PublishedDate { get; set; }
+    [JsonPropertyName("date_created")]
+    public required string CreatedDate { get; set; }
 
-    [JsonPropertyName("updated")]
-    public required string UpdatedDate { get; set; }
+    [JsonPropertyName("date_modified")]
+    public required string ModifiedDate { get; set; }
 
     [JsonPropertyName("downloads")]
     public required int Downloads { get; set; }
 
-    [JsonPropertyName("followers")]
-    public required int Followers { get; set; }
+    [JsonPropertyName("follows")]
+    public required int Follows { get; set; }
 
     [JsonPropertyName("gallery")]
-    public required List<Image> Gallery { get; set; } // TODO: Image object
+    public required List<string> Gallery { get; set; }
 
-    [JsonPropertyName("thread_id")]
-    public required string ModerationThreadId { get; set; }
-
-    [JsonPropertyName("monetization_status")]
-    public required string MonetisationStatus { get; set; } // TODO: Enum values: monetised, not monetised, demonetised.
+    [JsonPropertyName("dependencies")]
+    public required List<Dependency> Dependencies { get; set; }
 
     #nullable enable
 
@@ -123,28 +120,36 @@ public class Project
     }
 }
 
-public class V2Project
+public class V2Project : FullProjectBase
 {
-    [JsonPropertyName("id")]
-    public required string Id { get; set; }
-
     [JsonPropertyName("team")]
     public required string Team { get; set; }
 
     [JsonPropertyName("title")]
     public required string Title { get; set; }
 
-    [JsonPropertyName("description")]
-    public required string Description { get; set; }
-
     [JsonPropertyName("body")]
     public required string Body { get; set; }
 
-    [JsonPropertyName("status")]
-    public required string Status { get; set; } // TODO: Map to enum?
-
     [JsonPropertyName("project_type")]
     public required string ProjectType { get; set; } // TODO: Map to enum?
+}
+
+public class FullProject : FullProjectBase
+{
+    
+}
+
+public class FullProjectBase
+{
+    [JsonPropertyName("id")]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("description")]
+    public required string Description { get; set; }
+
+    [JsonPropertyName("status")]
+    public required string Status { get; set; } // TODO: Map to enum?
 
     [JsonPropertyName("categories")]
     public required List<string> Categories { get; set; }

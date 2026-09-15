@@ -19,6 +19,7 @@ obj-cli/
 
 perfview.exe
 *.etl
+fml.md
 
 # milcygtaniyjbfbd (man i love configuring your gitignore to actually not include your java build files by default)
 agent/.gradle

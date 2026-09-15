@@ -81,26 +81,29 @@ public static class Program
 
                 Log.Print(finalSearch.Construct());
 
-                await ModrinthV3.Search("", finalSearch, SearchIndex.Relevance, 0, 1);
-
+                SearchResponse response = await ModrinthV3.Search("", finalSearch, SearchIndex.Relevance, 0, 1);
+                FullProject? project = await ModrinthV3.GetProjectAsync(response.Hits[0].Id);
+                Log.Print(PrettyToString.Generic(project));
                 break;
             
             case "checky-neoforge":
                 await Init();
                 await VersionManifest.LoadAsync();
                 ClientManifest manifest = await NeoForge.GetClientManifestForGameVersionAsync(args[1]);
-                Log.Print(PrettyToString.List(manifest.Arguments.Jvm.ToList()));
-                Log.Print(PrettyToString.List(manifest.Arguments.Game.ToList()));
+                Log.Print(PrettyToString.FromList(manifest.Arguments.Jvm.ToList()));
+                Log.Print(PrettyToString.FromList(manifest.Arguments.Game.ToList()));
                 await HandleLaunch([], true, manifest);
                 break;
             
-            case "checky-lzma":
+            case "checky-nfinstall":
                 await Init();
                 await VersionManifest.LoadAsync();
                 string neoForgeVersion = await NeoForge.GetLatestNeoForgeVersionAsync(args[1]);
                 Log.Print($"latest neoforge is {neoForgeVersion}");
                 ClientManifest newManifest = await NeoForge.GetClientManifestAsync(neoForgeVersion);
+                await LaunchMinecraft.DownloadEverything(newManifest);
                 await NeoForge.InstallLoader(newManifest, neoForgeVersion);
+                await HandleLaunch([], true, newManifest);
                 break;
 
             default:

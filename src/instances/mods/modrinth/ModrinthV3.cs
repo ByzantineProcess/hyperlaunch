@@ -14,8 +14,8 @@ public static class ModrinthV3
 
     const string BaseModrinthV3Url = "https://api.modrinth.com/v3/";
     
-    public static async Task Search(string? query = null, FilterCollection? filters = null, SearchIndex? index = null,
-                                    int? offset = null, int? limit = null)
+    public static async Task<SearchResponse> Search(string? query = null, FilterCollection? filters = null, SearchIndex? index = null,
+                                                    int? offset = null, int? limit = null)
     {
         Dictionary<string, string> urlParams = new Dictionary<string, string>();
         if (query != null)
@@ -44,8 +44,21 @@ public static class ModrinthV3
         res.EnsureSuccessStatusCode();
         SearchResponse? searchResponse = await res.Content.ReadFromJsonAsync(HyperlaunchJsonContext.Default.SearchResponse);
         if (searchResponse == null) { throw new Exception("wahhhhhhh"); }
-        Log.Print(searchResponse.Hits[0].ToString());
+        
+        return searchResponse;
     }
+
+    // i'd like to thank the modrinth api for using the v2 type for some reason
+    public static async Task<FullProject?> GetProjectAsync(string projectIdOrSlug)
+    {
+        Log.Print($"requesting a {BaseModrinthV3Url}project/{projectIdOrSlug}");
+        HttpResponseMessage res = await Http.Client.GetAsync($"{BaseModrinthV3Url}project/{projectIdOrSlug}");
+        res.EnsureSuccessStatusCode();
+        FullProject? project = await res.Content.ReadFromJsonAsync(HyperlaunchJsonContext.Default.FullProject);
+        return project;
+    }
+
+
 }
 
 public enum SearchIndex
