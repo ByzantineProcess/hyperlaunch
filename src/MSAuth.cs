@@ -85,6 +85,8 @@ public static class MSAuth
                 } catch (MsalUiRequiredException)
                 {
                     AuthenticationResult result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], func).ExecuteAsync();
+                    account = await GameAccount.CreateAsync(result.AccessToken);
+                    callback.Invoke(account);
                 }
             }
         );
