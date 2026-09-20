@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="hyperlaunch"
 config/description="fastest minecraft launcher around."
-run/main_scene="uid://bcqxxg66s4xa4"
+run/main_scene="uid://b3lx03f22r4q"
 run/print_header=false
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 run/low_processor_mode=true
@@ -43,7 +43,7 @@ project/assembly_name="hyperlaunch"
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/godot_super-wakatime/plugin.cfg")
 
 [physics]
 
@@ -54,4 +54,5 @@ enabled=PackedStringArray()
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)

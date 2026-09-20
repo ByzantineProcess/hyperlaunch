@@ -125,9 +125,14 @@ public class ClientManifest
         JarVersion         ??= parent.JarVersion;
 
         // Concatenate libraries: child's first (higher priority), then parent's.
+
         var merged = new List<Library>();
         merged.AddRange(Libraries ?? new List<Library>());
-        merged.AddRange(parent.Libraries ?? new List<Library>());
+        List<string> currentLibraries = merged.Select(library => library.GetLibraryNameWithoutVersion()).ToList();
+        if (parent.Libraries != null)
+        {
+            merged.AddRange(parent.Libraries.Where(library => !currentLibraries.Contains(library.GetLibraryNameWithoutVersion())));
+        }
         Libraries = merged;
 
         // Inherit numeric fields only when the child left them at default.
@@ -320,8 +325,12 @@ public class ClientManifest
         // libraries should already be resolved by the time we call this
         // but we can still get a classpath
         // Use the jar key if set (e.g. Forge reuses the vanilla jar)
-        string jarVersion = JarVersion ?? BaseVersion ?? Id;
-        string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}/{jarVersion}.jar");
+        string jarVersion = "";
+        if (Id != null && Id.Length > 0) { jarVersion = Id; }
+        if (BaseVersion != null && BaseVersion.Length > 0) { jarVersion = BaseVersion; }
+        if (JarVersion != null && JarVersion.Length > 0) { jarVersion = JarVersion; }
+        Log.Print($"JarVersion ?? BaseVersion ?? Id became {JarVersion} ?? {BaseVersion} ?? {Id}, and {jarVersion} was selected.");
+        string classpath = BuildClasspath(os, DownloadTask.BaseLibraryPath, $"{DownloadTask.BaseVersionPath}{jarVersion}.jar");
         // make a directory for dumped native libs to go in
         string nativesDir = Path.Combine(DownloadTask.BasePath, "natives/", Id);
         Directory.CreateDirectory(nativesDir);

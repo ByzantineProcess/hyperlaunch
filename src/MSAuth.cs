@@ -4,6 +4,7 @@ using Microsoft.Identity.Client.Extensions.Msal;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Hyperlaunch;
 
@@ -45,11 +46,49 @@ public static class MSAuth
     public static async Task<string> AuthenticateAsync()
     {
         // TODO: gui
-        var result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], deviceCodeResult =>
+        AuthenticationResult result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], deviceCodeResult =>
         {
             Log.Print($"To authenticate, visit {deviceCodeResult.VerificationUrl} and enter the code: {deviceCodeResult.UserCode}");
             return Task.FromResult(0);
         }).ExecuteAsync();
         return result.AccessToken;
     }
+
+    #nullable enable
+    #if GODOT
+
+    public static void NonBlockingAuthenticate(Func<DeviceCodeResult, Task> func, Func<GameAccount, int> callback)
+    {
+        AuthenticationResult result;
+        GameAccount account;
+        Task.Run(async () =>
+            {
+                string homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var cacheHelper = await MsalCacheHelper.CreateAsync(new StorageCreationPropertiesBuilder("msal_cache.dat", homeDirectory + "/.hyperlaunch")
+                    .WithMacKeyChain("HyperlaunchMSALCache", "Hyperlaunch")
+                    .WithLinuxKeyring(
+                        "hyperlaunch",
+                        MsalCacheHelper.LinuxKeyRingDefaultCollection,
+                        "hyperlaunch",
+                        new KeyValuePair<string, string>("Version", "0.1"), // according to msal docs changing version invalidates older cache
+                        new KeyValuePair<string, string>("Product", "Hyperlaunch"))
+                    .Build());
+                
+                cacheHelper.RegisterCache(app.UserTokenCache);
+
+                var accounts = await app.GetAccountsAsync();
+                try
+                {
+                    result = await app.AcquireTokenSilent(["XboxLive.signin"], accounts.FirstOrDefault()).ExecuteAsync();
+                    account = await GameAccount.CreateAsync(result.AccessToken);
+                    callback.Invoke(account);
+                } catch (MsalUiRequiredException)
+                {
+                    AuthenticationResult result = await app.AcquireTokenWithDeviceCode(["XboxLive.signin"], func).ExecuteAsync();
+                }
+            }
+        );
+    }
+
+    #endif
 }

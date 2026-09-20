@@ -51,6 +51,17 @@ public class Library
         return $"{groupPath}/{artifactId}/{version}/{artifactId}-{version}.jar";
     }
 
+    public string GetLibraryNameWithoutVersion()
+    {
+        string[] parts = Name.Split(':');
+        if (parts.Length < 3)
+            throw new FormatException($"Invalid library name format: {Name}");
+        string groupId = parts[0];
+        string artifactId = parts[1];
+        return $"{groupId}:{artifactId}";
+
+    }
+
     public string GetNativeClassifierKey(OsInfo os)
     {
         if (Natives == null) return null;

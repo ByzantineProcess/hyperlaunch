@@ -1,0 +1,616 @@
+[gd_scene format=3 uid="uid://b3lx03f22r4q"]
+
+[ext_resource type="Script" uid="uid://dbqx061ryqgu7" path="res://godot-gui/MvpMain.cs" id="1_0tdrr"]
+[ext_resource type="Texture2D" uid="uid://caii35k6s6cx8" path="res://assets/logo transparent.png" id="2_w0pm6"]
+[ext_resource type="FontFile" uid="uid://bqfgqn2k0h7n" path="res://thirdparty/font/geist/GeistPixel-Regular-VariableFont_ELSH.ttf" id="3_w0pm6"]
+
+[node name="Root" type="Control" unique_id=1155956868]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0tdrr")
+
+[node name="Main" type="Control" parent="." unique_id=1602662641]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Border" type="Control" parent="Main" unique_id=251771012]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="Main/Border" unique_id=1071857955]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0)
+color = Color(0.14406255, 0.14406255, 0.14406255, 1)
+
+[node name="ColorRect2" type="ColorRect" parent="Main/Border" unique_id=622323554]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.965, 0.945)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+color = Color(0, 0, 0, 1)
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Main/Border/ColorRect2" unique_id=1601141413]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+offset_right = 1278.7566
+grow_vertical = 0
+theme_override_colors/default_color = Color(0.4045111, 0.40451115, 0.4045111, 1)
+bbcode_enabled = true
+text = "   [rainbow freq=1.0 sat=0.2 val=0.6 speed=1.0]Hyperlaunch[/rainbow] v0.1 - Launcher engine demo"
+fit_content = true
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Main/Border/ColorRect2" unique_id=749781241]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+offset_right = 1278.7566
+grow_vertical = 0
+theme_override_colors/default_color = Color(0.4045111, 0.40451115, 0.4045111, 1)
+fit_content = true
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Title" type="Control" parent="Main" unique_id=417934287]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="Control" type="Control" parent="Main/Title" unique_id=1173277945]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="Polygon2D" type="Polygon2D" parent="Main/Title/Control" unique_id=627417400]
+position = Vector2(0, 40.675)
+scale = Vector2(1.07, 1.26)
+color = Color(0.14509805, 0.14509805, 0.14509805, 1)
+offset = Vector2(18.73, 0)
+antialiased = true
+polygon = PackedVector2Array(0, 40, 168.00002, 40, 200, -32, -200, -32, -168.00002, 40)
+
+[node name="Sprite2D" type="Sprite2D" parent="Main/Title" unique_id=627830548]
+texture_filter = 1
+position = Vector2(1, 46.00001)
+scale = Vector2(2.63, 2.63)
+texture = ExtResource("2_w0pm6")
+
+[node name="Content" type="Control" parent="Main" unique_id=1774814782]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BuildInstance" type="Control" parent="Main/Content" unique_id=1421338364]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Space" type="ColorRect" parent="Main/Content/BuildInstance" unique_id=1409450274]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.31061712, 0.31061712, 0.3106171, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/Content/BuildInstance/Space" unique_id=423844526]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -184.0
+offset_right = 184.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Header" type="RichTextLabel" parent="Main/Content/BuildInstance/Space/VBoxContainer" unique_id=1750822966]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 34
+bbcode_enabled = true
+text = "create an instance"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+
+[node name="IName" type="LineEdit" parent="Main/Content/BuildInstance/Space/VBoxContainer" unique_id=145371185]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 20
+placeholder_text = "instance name"
+select_all_on_focus = true
+virtual_keyboard_enabled = false
+
+[node name="IVersion" type="OptionButton" parent="Main/Content/BuildInstance/Space/VBoxContainer" unique_id=1343444273]
+layout_mode = 2
+
+[node name="ILoader" type="OptionButton" parent="Main/Content/BuildInstance/Space/VBoxContainer" unique_id=271750902]
+layout_mode = 2
+selected = 0
+item_count = 4
+popup/item_0/text = "Vanilla"
+popup/item_0/id = 0
+popup/item_1/id = 1
+popup/item_1/separator = true
+popup/item_2/text = "Fabric"
+popup/item_2/id = 2
+popup/item_3/text = "NeoForge (26.1+)"
+popup/item_3/id = 3
+
+[node name="Spacer" type="RichTextLabel" parent="Main/Content/BuildInstance/Space/VBoxContainer" unique_id=324227834]
+layout_mode = 2
+text = "
+"
+fit_content = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/Content/BuildInstance/Space/VBoxContainer" unique_id=2058110465]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="Main/Content/BuildInstance/Space/VBoxContainer/HBoxContainer" unique_id=571580651]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Cancel"
+
+[node name="CreateInstanceButton" type="Button" parent="Main/Content/BuildInstance/Space/VBoxContainer/HBoxContainer" unique_id=447172978]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Go"
+
+[node name="AddToInstnace" type="Control" parent="Main/Content" unique_id=952746662]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Space" type="ColorRect" parent="Main/Content/AddToInstnace" unique_id=933171992]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -168.0
+offset_right = 200.0
+offset_bottom = 168.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.31061712, 0.31061712, 0.3106171, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/Content/AddToInstnace/Space" unique_id=1122012779]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -184.0
+offset_right = 184.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Header" type="RichTextLabel" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=1273088529]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 34
+bbcode_enabled = true
+text = "add mod to instance"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+
+[node name="IInstance" type="OptionButton" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=1006078562]
+layout_mode = 2
+
+[node name="ISearchQuery" type="LineEdit" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=1868587567]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 20
+placeholder_text = "modrinth search query"
+select_all_on_focus = true
+virtual_keyboard_enabled = false
+
+[node name="SearchButton" type="Button" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=1356822470]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Search"
+
+[node name="Spacer" type="RichTextLabel" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=465791182]
+layout_mode = 2
+text = "
+"
+fit_content = true
+
+[node name="ISelectedMod" type="OptionButton" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=1887274183]
+layout_mode = 2
+item_count = 1
+popup/item_0/id = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/Content/AddToInstnace/Space/VBoxContainer" unique_id=870143543]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="Main/Content/AddToInstnace/Space/VBoxContainer/HBoxContainer" unique_id=2087860549]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Cancel"
+
+[node name="InstallButton" type="Button" parent="Main/Content/AddToInstnace/Space/VBoxContainer/HBoxContainer" unique_id=540687923]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+disabled = true
+text = "Install"
+
+[node name="LaunchInstance" type="Control" parent="Main/Content" unique_id=2065927318]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Space" type="ColorRect" parent="Main/Content/LaunchInstance" unique_id=1086327373]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.31061712, 0.31061712, 0.3106171, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/Content/LaunchInstance/Space" unique_id=1895933614]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -184.0
+offset_right = 184.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Header" type="RichTextLabel" parent="Main/Content/LaunchInstance/Space/VBoxContainer" unique_id=127761981]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 34
+bbcode_enabled = true
+text = "launch instance"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+
+[node name="IInstance" type="OptionButton" parent="Main/Content/LaunchInstance/Space/VBoxContainer" unique_id=1504954772]
+layout_mode = 2
+
+[node name="Spacer" type="RichTextLabel" parent="Main/Content/LaunchInstance/Space/VBoxContainer" unique_id=1903587394]
+layout_mode = 2
+text = "
+"
+fit_content = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/Content/LaunchInstance/Space/VBoxContainer" unique_id=1639558837]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="Main/Content/LaunchInstance/Space/VBoxContainer/HBoxContainer" unique_id=1838346796]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Cancel"
+
+[node name="LaunchInstanceButton" type="Button" parent="Main/Content/LaunchInstance/Space/VBoxContainer/HBoxContainer" unique_id=1259905832]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Go"
+
+[node name="Login" type="Control" parent="Main/Content" unique_id=1833307418]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Space" type="ColorRect" parent="Main/Content/Login" unique_id=612206529]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -168.0
+offset_right = 200.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.31061712, 0.31061712, 0.3106171, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/Content/Login/Space" unique_id=1347544134]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -184.0
+offset_right = 184.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Header" type="RichTextLabel" parent="Main/Content/Login/Space/VBoxContainer" unique_id=659487629]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 34
+bbcode_enabled = true
+text = "login"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+
+[node name="Spacer2" type="RichTextLabel" parent="Main/Content/Login/Space/VBoxContainer" unique_id=1316782806]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 8
+text = "
+"
+fit_content = true
+
+[node name="Instructions" type="RichTextLabel" parent="Main/Content/Login/Space/VBoxContainer" unique_id=905146334]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 22
+text = "in a browser,
+go to microsoft.com/link"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="Code" type="RichTextLabel" parent="Main/Content/Login/Space/VBoxContainer" unique_id=213418901]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 22
+text = "code is: "
+fit_content = true
+horizontal_alignment = 1
+
+[node name="Spacer" type="RichTextLabel" parent="Main/Content/Login/Space/VBoxContainer" unique_id=147225326]
+layout_mode = 2
+text = "
+"
+fit_content = true
+
+[node name="LoginButtons" type="HBoxContainer" parent="Main/Content/Login/Space/VBoxContainer" unique_id=745717059]
+layout_mode = 2
+
+[node name="OpenLink" type="Button" parent="Main/Content/Login/Space/VBoxContainer/LoginButtons" unique_id=1844127586]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Open Link"
+
+[node name="CopyCode" type="Button" parent="Main/Content/Login/Space/VBoxContainer/LoginButtons" unique_id=1265428360]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+disabled = true
+text = "Copy Code"
+
+[node name="Buttons" type="HBoxContainer" parent="Main/Content/Login/Space/VBoxContainer" unique_id=1070925309]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="Main/Content/Login/Space/VBoxContainer/Buttons" unique_id=298636042]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Cancel"
+
+[node name="FinishFlow" type="Button" parent="Main/Content/Login/Space/VBoxContainer/Buttons" unique_id=1065676732]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+disabled = true
+text = "Finish"
+
+[node name="Glue" type="Control" parent="Main/Content" unique_id=1275474177]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Space" type="ColorRect" parent="Main/Content/Glue" unique_id=1065546790]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -168.0
+offset_right = 200.0
+offset_bottom = 168.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.31061712, 0.31061712, 0.3106171, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/Content/Glue/Space" unique_id=1367944791]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -184.0
+offset_right = 184.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Header" type="RichTextLabel" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=1202717664]
+layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("3_w0pm6")
+theme_override_font_sizes/normal_font_size = 34
+bbcode_enabled = true
+text = "menu"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+
+[node name="Login" type="Button" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=1387317895]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Login"
+
+[node name="CreateInstance" type="Button" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=1222469019]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Create Instance"
+
+[node name="LaunchInstance" type="Button" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=1559801737]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Launch Instance"
+
+[node name="AddModToInstance" type="Button" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=937379874]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Add Mod to Instance"
+
+[node name="Spacer" type="RichTextLabel" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=1893198227]
+layout_mode = 2
+text = "
+"
+fit_content = true
+
+[node name="Exit" type="Button" parent="Main/Content/Glue/Space/VBoxContainer" unique_id=324571355]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("3_w0pm6")
+theme_override_font_sizes/font_size = 24
+text = "Exit"
+
+[node name="TooSmall" type="Control" parent="." unique_id=1064109965]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ErrorMessage" type="RichTextLabel" parent="TooSmall" unique_id=773394126]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -132.5
+offset_top = -37.5
+offset_right = 132.5
+offset_bottom = 37.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "This window is too small.
+Please resize it, or increase your display's resolution"
+
+[connection signal="pressed" from="Main/Content/BuildInstance/Space/VBoxContainer/HBoxContainer/CancelButton" to="." method="_on_cancel_button_pressed_buildinstance"]
+[connection signal="pressed" from="Main/Content/BuildInstance/Space/VBoxContainer/HBoxContainer/CreateInstanceButton" to="." method="_on_create_instance_button_pressed"]
+[connection signal="pressed" from="Main/Content/AddToInstnace/Space/VBoxContainer/SearchButton" to="." method="_on_search_button_pressed"]
+[connection signal="pressed" from="Main/Content/AddToInstnace/Space/VBoxContainer/HBoxContainer/CancelButton" to="." method="_on_cancel_button_pressed_addtoinstance"]
+[connection signal="pressed" from="Main/Content/AddToInstnace/Space/VBoxContainer/HBoxContainer/InstallButton" to="." method="_on_install_button_pressed"]
+[connection signal="pressed" from="Main/Content/LaunchInstance/Space/VBoxContainer/HBoxContainer/CancelButton" to="." method="_on_cancel_button_pressed_launchinstance"]
+[connection signal="pressed" from="Main/Content/LaunchInstance/Space/VBoxContainer/HBoxContainer/LaunchInstanceButton" to="." method="_on_launch_instance_button_pressed"]
+[connection signal="pressed" from="Main/Content/Login/Space/VBoxContainer/LoginButtons/OpenLink" to="." method="_on_open_link_pressed"]
+[connection signal="pressed" from="Main/Content/Login/Space/VBoxContainer/LoginButtons/CopyCode" to="." method="_on_copy_code_pressed"]
+[connection signal="pressed" from="Main/Content/Login/Space/VBoxContainer/Buttons/CancelButton" to="." method="_on_cancel_button_pressed_login"]
+[connection signal="pressed" from="Main/Content/Login/Space/VBoxContainer/Buttons/FinishFlow" to="." method="_on_finish_flow_pressed"]
+[connection signal="pressed" from="Main/Content/Glue/Space/VBoxContainer/Login" to="." method="_on_login_pressed"]
+[connection signal="pressed" from="Main/Content/Glue/Space/VBoxContainer/CreateInstance" to="." method="_on_create_instance_pressed"]
+[connection signal="pressed" from="Main/Content/Glue/Space/VBoxContainer/LaunchInstance" to="." method="_on_launch_instance_pressed"]
+[connection signal="pressed" from="Main/Content/Glue/Space/VBoxContainer/AddModToInstance" to="." method="_on_add_mod_to_instance_pressed"]
+[connection signal="pressed" from="Main/Content/Glue/Space/VBoxContainer/Exit" to="." method="_on_exit_pressed"]

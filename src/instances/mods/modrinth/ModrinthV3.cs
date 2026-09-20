@@ -99,6 +99,7 @@ public static class ModrinthV3
     {
         if (paths == null) { paths = DownloadTask.ScanPaths(); }
         ModrinthVersion version = await ResolveInstanceAndProjectToVersion(instance, projectId);
+        Log.Print($"resolved project to version {version.Id}");
         List<Dependency> requiredDeps = version.Dependencies.Where(dependency => dependency.DependencyType == "required").ToList();
         if (requiredDeps.Count > 0)
         {

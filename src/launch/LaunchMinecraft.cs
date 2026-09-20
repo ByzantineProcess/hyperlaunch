@@ -33,6 +33,9 @@ public class LaunchMinecraft
         {
             double mbRemaining = bytesRemaining / (1024.0 * 1024.0);
             Console.Write($"\rDownload progress: {mbRemaining:F2} MB remaining   ");
+            #if GODOT
+            MvpMainsVeryOwnNotThreadSafeStatusContainer.Status = $"Download progress: {mbRemaining:F2} MB remaining";
+            #endif
         });
 
         await DownloadTask.ExecuteAllAsync(downloadTasks.ToList(), maxConcurrentNetwork: 16, bytesRemainingProgress: progress);
@@ -99,6 +102,7 @@ public class LaunchMinecraft
         GameAccount gameAccount = await authTask;
         List<Jvm> jvms = await scanJvmsTask;
         int requiredJava = clientManifest.JavaVersion?.MajorVersion ?? 8;
+        Log.Print($"determined that {requiredJava} is probably best?");
         Jvm jvm = Jvm.FindBestForVersion(requiredJava, jvms);
 
         Launch(jvm, gameAccount, clientManifest, instance);
@@ -133,6 +137,7 @@ public class LaunchMinecraft
         
         var process = System.Diagnostics.Process.Start(startInfo);
         Log.Print($"{process.StandardOutput.ReadToEnd()}");
+        Log.Print($"{process.StandardError.ReadToEnd()}");
         Log.Print($"{process.ExitCode}");
     }
 

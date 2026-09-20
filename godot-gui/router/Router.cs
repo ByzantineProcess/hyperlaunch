@@ -4,7 +4,7 @@ using System.Linq;
 
 public partial class Router : Node
 {
-    PackedScene gui = GD.Load<PackedScene>("res://godot-gui/main.tscn");
+    PackedScene gui = GD.Load<PackedScene>("res://godot-gui/mvpmain.tscn");
 	public override void _Process(double delta)
     {
         string[] args = OS.GetCmdlineArgs();
@@ -18,7 +18,5 @@ public partial class Router : Node
             // otherwise, load the gui
             GetTree().ChangeSceneToPacked(gui);
         }
-
-        
     }
 }

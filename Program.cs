@@ -170,6 +170,10 @@ public static class Program
                 await NeoForge.InstallLoader(newManifest, neoForgeVersion);
                 await HandleLaunch([], true, newManifest);
                 break;
+            
+            case "checky":
+                Log.Print(PrettyToString.FromList(Instance.ListAll()));
+                break;
 
             default:
                 Log.PrintErr($"Unknown command: {args[0]}");
@@ -242,7 +246,7 @@ public static class Program
                 break;
             
             case ClientType.NeoForge:
-                if (!instance.MainVersion.StartsWith("26")) { Log.Print("Obfuscated NeoForge is not ready yet."); }
+                if (!instance.MainVersion.StartsWith("26")) { Log.PrintErr("Obfuscated NeoForge is not ready yet."); }
                 string neoForgeVersion = await NeoForge.GetLatestNeoForgeVersionAsync(instance.MainVersion);
                 Log.Print($"latest neoforge is {neoForgeVersion}");
                 ClientManifest newManifest = await NeoForge.GetClientManifestAsync(neoForgeVersion);
@@ -255,9 +259,7 @@ public static class Program
             default:
                 Log.Print("Other loaders are in progress.");
                 break;
-
         }
-        
     }
 
     static async Task HandleLaunch(string[] args, bool forceModernJava, ClientManifest? overrideClientManifest = null)
