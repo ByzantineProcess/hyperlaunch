@@ -22,6 +22,9 @@ If you don't have one, you can get [Temurin](https://adoptium.net/temurin/releas
 
 ## CLI version
 Hyperlaunch has a CLI mode available for use. It's not recommended, but you can launch from here if you want.
+
+You can find auto-generated builds for all platforms in the Actions tab.
+
 **Command reference:**
  - login - (Interactive) Starts the login process.
  - versions - Lists recently published game versions available for download.
