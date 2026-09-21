@@ -83,6 +83,11 @@ public class Instance
         File.WriteAllText(Path.Combine(GetInstancePath(), "hyperlaunch_instance.json"), jsonInstance);
     }
 
+    public void EnsureModsFolderExists()
+    {
+        Directory.CreateDirectory(Path.Combine(GetInstancePath(), "mods/"));
+    }
+
 
     public static List<string> ListAll()
     {

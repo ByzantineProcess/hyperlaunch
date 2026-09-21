@@ -56,6 +56,8 @@ public partial class MvpMain : Control
         Instance instance = new Instance(name, clientType, version, false);
         instance.Save();
 
+        if (iLoader == 2 || iLoader == 3) { instance.EnsureModsFolderExists(); }
+
         RefreshInstances();
 
         _on_cancel_button_pressed_buildinstance();
