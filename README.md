@@ -40,8 +40,6 @@ You can find auto-generated builds for all platforms in the Actions tab.
  - Vercel's Geist Pixel font (OFL license)
 
 ### If you're from Stardance
-The demo link provided has links to both a short demo video. 
-
 I don't consider the CLI version to be a "ship", but you are welcome to try it out.
 
 ### AI usage
